@@ -21,7 +21,7 @@ import vavi.util.StringUtil;
 
 
 /**
- * Windows ‚ÌƒŒƒWƒXƒgƒŠî•ñ‚ğ•\‚·ƒNƒ‰ƒX‚Å‚·D
+ * Windows ã®ãƒ¬ã‚¸ã‚¹ãƒˆãƒªæƒ…å ±ã‚’è¡¨ã™ã‚¯ãƒ©ã‚¹ã§ã™ï¼
  * 
  * @author <a href="mailto:vavivavi@yahoo.co.jp">Naohide Sano</a> (nsano)
  * @version 0.00 990629 nsano initial version <br>
@@ -31,28 +31,28 @@ import vavi.util.StringUtil;
  */
 public class Registry {
 
-    /** •¶š—ñ‚Ìƒf[ƒ^Œ^ */
+    /** æ–‡å­—åˆ—ã®ãƒ‡ãƒ¼ã‚¿å‹ */
     public static final int RegSZ = 0x00000001;
-    /** ƒoƒCƒiƒŠ‚Ìƒf[ƒ^Œ^ */
+    /** ãƒã‚¤ãƒŠãƒªã®ãƒ‡ãƒ¼ã‚¿å‹ */
     public static final int RegBin = 0x00000003;
-    /** ”’l‚Ìƒf[ƒ^Œ^ */
+    /** æ•°å€¤ã®ãƒ‡ãƒ¼ã‚¿å‹ */
     public static final int RegDWord = 0x00000004;
 
-    /** ƒŒƒWƒXƒgƒŠƒtƒ@ƒCƒ‹‚Ìƒoƒbƒtƒ@ */
+    /** ãƒ¬ã‚¸ã‚¹ãƒˆãƒªãƒ•ã‚¡ã‚¤ãƒ«ã®ãƒãƒƒãƒ•ã‚¡ */
     private byte[] memory;
 
     /** CREG */
     private CREG creg;
     /** RGKN */
     private RGKN rgkn;
-    /** RGDB ‚ÌƒxƒNƒ^ */
+    /** RGDB ã®ãƒ™ã‚¯ã‚¿ */
     private RGDB[] rgdbs;
 
     /** The encoding */
     private static final String encoding = "JISAutoDetect";
 
     /**
-     * ƒŒƒWƒXƒgƒŠ‚ğƒXƒgƒŠ[ƒ€‚©‚ç\’z‚µ‚Ü‚·D
+     * ãƒ¬ã‚¸ã‚¹ãƒˆãƒªã‚’ã‚¹ãƒˆãƒªãƒ¼ãƒ ã‹ã‚‰æ§‹ç¯‰ã—ã¾ã™ï¼
      *
      * <pre>
      * CREG
@@ -124,12 +124,12 @@ Debug.println("stream length: " + is.available());
 
     //-------------------------------------------------------------------------
 
-    /** ƒŒƒWƒXƒgƒŠ‚Ìƒ‹[ƒg‚ğæ“¾‚µ‚Ü‚·D */
+    /** ãƒ¬ã‚¸ã‚¹ãƒˆãƒªã®ãƒ«ãƒ¼ãƒˆã‚’å–å¾—ã—ã¾ã™ï¼ */
     protected TreeRecode getRoot(Class<?> inner) {
         return newInstance(inner, 0x20 + rgkn.offsetOfRootRecode);
     }
 
-    /** V‚µ‚¢ TreeRecode ‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚ğ•Ô‚µ‚Ü‚·D */
+    /** æ–°ã—ã„ TreeRecode ã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’è¿”ã—ã¾ã™ï¼ */
     private TreeRecode newInstance(Class<?> inner, int offset) {
         try {
 /*
@@ -155,17 +155,17 @@ Debug.printStackTrace(e);
     //-------------------------------------------------------------------------
 
     /**
-     * TreeRecode ‚Ìƒ†[ƒUƒCƒ“ƒ^[ƒtƒF[ƒX‚Å‚·D
+     * TreeRecode ã®ãƒ¦ãƒ¼ã‚¶ã‚¤ãƒ³ã‚¿ãƒ¼ãƒ•ã‚§ãƒ¼ã‚¹ã§ã™ï¼
      */
     protected class TreeRecodeImpl extends TreeRecode {
         
-        /** TreeRecode ‚Ì ValueRecode ‚ª‚ ‚é RGDBRecode */
+        /** TreeRecode ã® ValueRecode ãŒã‚ã‚‹ RGDBRecode */
         private RGDBRecode rgdbRecode;
         
-        /**  TreeRecode ‚Ì ValueRecode */
+        /**  TreeRecode ã® ValueRecode */
         private ValueRecode[] valueRecodes;
         
-        /** TreeRecodeImpl ‚ğ\’z‚µ‚Ü‚·D */
+        /** TreeRecodeImpl ã‚’æ§‹ç¯‰ã—ã¾ã™ï¼ */
         public TreeRecodeImpl(int offset) {
             super(offset);
 
@@ -196,40 +196,40 @@ return;
             valueRecodes = rgdbRecode.vrs;
         }
 
-        /** q‹Ÿ‚Ì TreeRecode ‚ª‚ ‚é‚©‚Ç‚¤‚©‚ğ•Ô‚µ‚Ü‚·D */
+        /** å­ä¾›ã® TreeRecode ãŒã‚ã‚‹ã‹ã©ã†ã‹ã‚’è¿”ã—ã¾ã™ï¼ */
         public boolean hasChildTreeRecodes() {
 //Debug.println(offsetOf1stSubkey != -1);
             return offsetOf1stSubkey != -1;
         }
         
-        /** Å‰‚Ìq‹Ÿ‚Ì TreeRecode ‚ğæ“¾‚µ‚Ü‚·D */
+        /** æœ€åˆã®å­ä¾›ã® TreeRecode ã‚’å–å¾—ã—ã¾ã™ï¼ */
         public TreeRecode get1stChildTreeRecode() {
             return newInstance(getClass(), 0x20 + offsetOf1stSubkey);
         }
         
-        /** Ÿ‚Ì TreeRecode ‚ª‚ ‚é‚©‚Ç‚¤‚©‚ğ•Ô‚µ‚Ü‚·D */
+        /** æ¬¡ã® TreeRecode ãŒã‚ã‚‹ã‹ã©ã†ã‹ã‚’è¿”ã—ã¾ã™ï¼ */
         public boolean hasNextTreeRecode() {
 //Debug.println(offsetOfNext != -1);
             return offsetOfNext != -1;
         }
         
-        /** Ÿ‚Ì TreeRecode ‚ğæ“¾‚µ‚Ü‚·D */
+        /** æ¬¡ã® TreeRecode ã‚’å–å¾—ã—ã¾ã™ï¼ */
         public TreeRecode getNextTreeRecode() {
             return newInstance(getClass(), 0x20 + offsetOfNext);
         }
         
-        /** TreeRecode ‚ÌƒL[–¼‚ğæ“¾‚µ‚Ü‚·D */
+        /** TreeRecode ã®ã‚­ãƒ¼åã‚’å–å¾—ã—ã¾ã™ï¼ */
         public String getKeyName() {
             if (rgdbRecode != null) {
                 return rgdbRecode.keyName;
             } else if (numberOfRGDB == -1) {
                 return "HKEY_root";
             } else {
-                return "???";	// ‚½‚Ô‚ñƒVƒ“ƒ{ƒŠƒbƒNƒŠƒ“ƒN‚¶‚á‚È‚¢‚ÌH
+                return "???";	// ãŸã¶ã‚“ã‚·ãƒ³ãƒœãƒªãƒƒã‚¯ãƒªãƒ³ã‚¯ã˜ã‚ƒãªã„ã®ï¼Ÿ
             }
         }
         
-        /** TreeRecode ‚ª‚ÂƒL[‚Ì”‚ğ•Ô‚µ‚Ü‚·D */
+        /** TreeRecode ãŒæŒã¤ã‚­ãƒ¼ã®æ•°ã‚’è¿”ã—ã¾ã™ï¼ */
         protected int getKeySize() {
             if (valueRecodes != null) {
                 return valueRecodes.length;
@@ -238,22 +238,22 @@ return;
             }
         }
         
-        /** ƒCƒ“ƒfƒbƒNƒX‚Åw’è‚µ‚½ƒf[ƒ^‚Ì–¼‘O‚ğæ“¾‚µ‚Ü‚·D */
+        /** ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã§æŒ‡å®šã—ãŸãƒ‡ãƒ¼ã‚¿ã®åå‰ã‚’å–å¾—ã—ã¾ã™ï¼ */
         protected String getValueName(int index) {
             return valueRecodes[index].valueName;
         }
         
-        /** ƒCƒ“ƒfƒbƒNƒX‚Åw’è‚µ‚½ƒf[ƒ^‚ÌŒ^‚ğæ“¾‚µ‚Ü‚·D */
+        /** ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã§æŒ‡å®šã—ãŸãƒ‡ãƒ¼ã‚¿ã®å‹ã‚’å–å¾—ã—ã¾ã™ï¼ */
         protected int getValueType(int index) {
             return valueRecodes[index].type;
         }
         
-        /** ƒCƒ“ƒfƒbƒNƒX‚Åw’è‚µ‚½ƒf[ƒ^‚Ì’l‚ğæ“¾‚µ‚Ü‚·D */
+        /** ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã§æŒ‡å®šã—ãŸãƒ‡ãƒ¼ã‚¿ã®å€¤ã‚’å–å¾—ã—ã¾ã™ï¼ */
         protected byte[] getValueData(int index) {
             return valueRecodes[index].valueData;
         }
         
-        /** ƒCƒ“ƒfƒbƒNƒX‚Åw’è‚µ‚½ƒf[ƒ^‚Ì’l‚ğ String ‚Æ‚µ‚Äæ“¾‚µ‚Ü‚·D*/
+        /** ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã§æŒ‡å®šã—ãŸãƒ‡ãƒ¼ã‚¿ã®å€¤ã‚’ String ã¨ã—ã¦å–å¾—ã—ã¾ã™ï¼*/
         protected String getValueDataAsString(int index) {
             try {
                 return new String(getValueData(index), encoding);
@@ -263,7 +263,7 @@ Debug.printStackTrace(e);
             }
         }
         
-        /** ƒCƒ“ƒfƒbƒNƒX‚Åw’è‚µ‚½ƒf[ƒ^‚Ì’l‚ğ int ‚Æ‚µ‚Äæ“¾‚µ‚Ü‚·D */
+        /** ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã§æŒ‡å®šã—ãŸãƒ‡ãƒ¼ã‚¿ã®å€¤ã‚’ int ã¨ã—ã¦å–å¾—ã—ã¾ã™ï¼ */
         protected int getValueDataAsDWord(int index) {
             byte[] b = getValueData(index);
             return getDWord(b[0], b[1], b[2], b[3]);
@@ -273,16 +273,16 @@ Debug.printStackTrace(e);
     //-------------------------------------------------------------------------
 
     /**
-     * ƒŒƒWƒXƒgƒŠ‚Ìƒwƒbƒ_î•ñ‚ğ•\‚µ‚Ü‚·D
+     * ãƒ¬ã‚¸ã‚¹ãƒˆãƒªã®ãƒ˜ãƒƒãƒ€æƒ…å ±ã‚’è¡¨ã—ã¾ã™ï¼
      */
     private final class CREG {
 
-        /** Å‰‚Ì RGDB ‚Ö‚ÌƒIƒtƒZƒbƒg */
+        /** æœ€åˆã® RGDB ã¸ã®ã‚ªãƒ•ã‚»ãƒƒãƒˆ */
         private int offsetOf1stRGDB;
-        /** RGDB ‚Ì” */
+        /** RGDB ã®æ•° */
         private int numberOfRGDB;
         
-        /** CREG ‚ğ\’z‚µ‚Ü‚·D */
+        /** CREG ã‚’æ§‹ç¯‰ã—ã¾ã™ï¼ */
         public CREG() throws IOException {
             
             if (!checkHeader("CREG",
@@ -306,19 +306,19 @@ Debug.printStackTrace(e);
     }
 
     /**
-     * ƒŒƒWƒXƒgƒŠ‚ÌƒcƒŠ[î•ñ‚Ìƒwƒbƒ_‚ğ•\‚µ‚Ü‚·D
+     * ãƒ¬ã‚¸ã‚¹ãƒˆãƒªã®ãƒ„ãƒªãƒ¼æƒ…å ±ã®ãƒ˜ãƒƒãƒ€ã‚’è¡¨ã—ã¾ã™ï¼
      */
     private final class RGKN {
 
-        /** RGKN ‚ÌƒTƒCƒYH */
+        /** RGKN ã®ã‚µã‚¤ã‚ºï¼Ÿ */
         int size;
-        /** ƒ‹[ƒg‚Ì TreeRecode ‚Ö‚ÌƒIƒtƒZƒbƒg */
+        /** ãƒ«ãƒ¼ãƒˆã® TreeRecode ã¸ã®ã‚ªãƒ•ã‚»ãƒƒãƒˆ */
         int offsetOfRootRecode;
         
-        /** CREG ‚ÌƒTƒCƒYH */
+        /** CREG ã®ã‚µã‚¤ã‚ºï¼Ÿ */
         static final int offset = 0x20;
         
-        /** RGKN ‚ğ\’z‚µ‚Ü‚·D */
+        /** RGKN ã‚’æ§‹ç¯‰ã—ã¾ã™ï¼ */
         RGKN() {
             
             if (!checkHeader("RGKN",
@@ -344,24 +344,24 @@ Debug.printStackTrace(e);
     }
 
     /**
-     * ƒŒƒWƒXƒgƒŠ‚ÌƒcƒŠ[\‘¢‚ğ•\‚·ƒNƒ‰ƒX‚Å‚·D
+     * ãƒ¬ã‚¸ã‚¹ãƒˆãƒªã®ãƒ„ãƒªãƒ¼æ§‹é€ ã‚’è¡¨ã™ã‚¯ãƒ©ã‚¹ã§ã™ï¼
      */
     private class TreeRecode {
 
-        /** RGDBRecode ‚ÌƒnƒbƒVƒ…’lH */
+        /** RGDBRecode ã®ãƒãƒƒã‚·ãƒ¥å€¤ï¼Ÿ */
         int hash;
-        /** e‚Ì TreeRecode ‚Ö‚ÌƒIƒtƒZƒbƒg */
+        /** è¦ªã® TreeRecode ã¸ã®ã‚ªãƒ•ã‚»ãƒƒãƒˆ */
         int offsetOfParent;
-        /** Å‰‚Ìq‹Ÿ‚Ì TreeRecode ‚Ö‚ÌƒIƒtƒZƒbƒg */
+        /** æœ€åˆã®å­ä¾›ã® TreeRecode ã¸ã®ã‚ªãƒ•ã‚»ãƒƒãƒˆ */
         int offsetOf1stSubkey;
-        /** Ÿ‚Ì TreeRecode ‚Ö‚ÌƒIƒtƒZƒbƒg */
+        /** æ¬¡ã® TreeRecode ã¸ã®ã‚ªãƒ•ã‚»ãƒƒãƒˆ */
         int offsetOfNext;
-        /** RGDBRecode ‚ª‚ ‚é RGDB ‚ÌƒCƒ“ƒfƒbƒNƒX */
+        /** RGDBRecode ãŒã‚ã‚‹ RGDB ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ */
         int numberOfRGDB;
-        /** RGDB “à‚Å‚Ì RGDBRecode ‚ÌƒCƒ“ƒfƒbƒNƒX */
+        /** RGDB å†…ã§ã® RGDBRecode ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ */
         int numberInRGDB;
         
-        /** TreeRecode ‚ğ\’z‚µ‚Ü‚·D */
+        /** TreeRecode ã‚’æ§‹ç¯‰ã—ã¾ã™ï¼ */
         TreeRecode(int offset) {
             
             int dummy;
@@ -421,21 +421,21 @@ Debug.println("idNumber: " + "0x" + StringUtil.toHex8(idNumber));
 //Debug.println("numberOfRGDB: " + numberOfRGDB);
         }
         
-        /** ID ‚ğ•Ô‚µ‚Ü‚·D */
+        /** ID ã‚’è¿”ã—ã¾ã™ï¼ */
         int getIdNumber() { return (numberOfRGDB << 16) | numberInRGDB; }
     }
 
     /**
-     * ƒŒƒWƒXƒgƒŠ‚ÌƒuƒƒbƒN‚Å‚·D•¡”‚Ì RGDBRecode ‚ğ“à•ï‚µ‚Ü‚·D
+     * ãƒ¬ã‚¸ã‚¹ãƒˆãƒªã®ãƒ–ãƒ­ãƒƒã‚¯ã§ã™ï¼è¤‡æ•°ã® RGDBRecode ã‚’å†…åŒ…ã—ã¾ã™ï¼
      */
     private final class RGDB {
 
-        /** RGDB ‚ÌƒTƒCƒY */
+        /** RGDB ã®ã‚µã‚¤ã‚º */
         int size;
-        /** RGDBRecode ‚ÌƒxƒNƒ^ */
+        /** RGDBRecode ã®ãƒ™ã‚¯ã‚¿ */
         List<RGDBRecode> rrs = new ArrayList<RGDBRecode>();
         
-        /** RGDB ‚ğ\’z‚µ‚Ü‚·D */
+        /** RGDB ã‚’æ§‹ç¯‰ã—ã¾ã™ï¼ */
         RGDB(int offset)	{
             
             if (!checkHeader("RGDB",
@@ -469,26 +469,26 @@ Debug.println("idNumber: " + "0x" + StringUtil.toHex8(idNumber));
     }
 
     /**
-     * ƒL[‚ğ•\‚µ‚Ü‚·D•¡”‚Ì ValueRecode ‚ğ“à•ï‚µ‚Ü‚·D
+     * ã‚­ãƒ¼ã‚’è¡¨ã—ã¾ã™ï¼è¤‡æ•°ã® ValueRecode ã‚’å†…åŒ…ã—ã¾ã™ï¼
      */
     private final class RGDBRecode {
         
-        /** RGDBRecode ‚ÌƒTƒCƒY */
+        /** RGDBRecode ã®ã‚µã‚¤ã‚º */
         int length;
-        /** TreeRecode ‚ÅQÆ‚³‚ê‚é ID */
+        /** TreeRecode ã§å‚ç…§ã•ã‚Œã‚‹ ID */
         int idNumber;
-        /** RGDBRecode ‚ÌH */
+        /** RGDBRecode ã®ï¼Ÿ */
         int size;
-        /** ƒL[‚Ì–¼‘O‚Ì’·‚³ */
+        /** ã‚­ãƒ¼ã®åå‰ã®é•·ã• */
         int textLength;
-        /** ƒŒƒWƒXƒgƒŠ‚Ì’l‚Ì” */
+        /** ãƒ¬ã‚¸ã‚¹ãƒˆãƒªã®å€¤ã®æ•° */
         int numberOfValues;
-        /** ƒL[‚Ì–¼‘O */
+        /** ã‚­ãƒ¼ã®åå‰ */
         String keyName;
-        /** ƒŒƒWƒXƒgƒŠ‚Ì’l */
+        /** ãƒ¬ã‚¸ã‚¹ãƒˆãƒªã®å€¤ */
         ValueRecode[] vrs;
         
-        /** RGDBRecode ‚ğ\’z‚µ‚Ü‚·D */
+        /** RGDBRecode ã‚’æ§‹ç¯‰ã—ã¾ã™ï¼ */
         RGDBRecode(int offset) {
             
             int dummy;
@@ -556,7 +556,7 @@ Debug.println(e);
             }
         }
 
-        /** TreeRecode ‚ÅQÆ‚³‚ê‚éƒnƒbƒVƒ…’l‚ğæ“¾‚µ‚Ü‚·D */
+        /** TreeRecode ã§å‚ç…§ã•ã‚Œã‚‹ãƒãƒƒã‚·ãƒ¥å€¤ã‚’å–å¾—ã—ã¾ã™ï¼ */
         int getHash() {
             
             int hash = 0;
@@ -579,22 +579,22 @@ Debug.println(e);
     }
 
     /**
-     * ƒŒƒWƒXƒgƒŠ‚Ì‚P‚Â‚Ìƒf[ƒ^‚ğ•\‚·ƒNƒ‰ƒX‚Å‚·D
+     * ãƒ¬ã‚¸ã‚¹ãƒˆãƒªã®ï¼‘ã¤ã®ãƒ‡ãƒ¼ã‚¿ã‚’è¡¨ã™ã‚¯ãƒ©ã‚¹ã§ã™ï¼
      */
     private final class ValueRecode {
 
-        /** ƒf[ƒ^‚ÌŒ^ */
+        /** ãƒ‡ãƒ¼ã‚¿ã®å‹ */
         int type;
-        /** ƒf[ƒ^‚Ì–¼‘O‚Ì’·‚³ */
+        /** ãƒ‡ãƒ¼ã‚¿ã®åå‰ã®é•·ã• */
         int lengthOfValueName;
-        /** ƒf[ƒ^‚Ì’·‚³ */
+        /** ãƒ‡ãƒ¼ã‚¿ã®é•·ã• */
         int lengthOfValueData;
-        /** ƒf[ƒ^‚Ì–¼‘O */
+        /** ãƒ‡ãƒ¼ã‚¿ã®åå‰ */
         String valueName;
-        /** ƒf[ƒ^ */
+        /** ãƒ‡ãƒ¼ã‚¿ */
         byte[] valueData;
         
-        /** ValueRecode ‚ğ\’z‚µ‚Ü‚·D */
+        /** ValueRecode ã‚’æ§‹ç¯‰ã—ã¾ã™ï¼ */
         ValueRecode(int offset) {
             int dummy;
 
@@ -659,7 +659,7 @@ Debug.println("data: unknown(" + type + ")");
             }
         }
 
-        /** ƒf[ƒ^‚Ì•û‚ğ•¶š—ñ‚Æ‚µ‚Ä•Ô‚µ‚Ü‚·D */
+        /** ãƒ‡ãƒ¼ã‚¿ã®æ–¹ã‚’æ–‡å­—åˆ—ã¨ã—ã¦è¿”ã—ã¾ã™ï¼ */
         String getTypeName(int type) {
             
             switch (type) {
@@ -679,19 +679,19 @@ Debug.println("data: unknown(" + type + ")");
 
     //-------------------------------------------------------------------------
 
-    /** ƒŠƒgƒ‹ƒGƒ“ƒfƒBƒAƒ“‚Å 4 Byte ’·‚Ì int ‚Æ‚µ‚Äƒf[ƒ^‚ğ“Ç‚İ‚Ü‚·D */
+    /** ãƒªãƒˆãƒ«ã‚¨ãƒ³ãƒ‡ã‚£ã‚¢ãƒ³ã§ 4 Byte é•·ã® int ã¨ã—ã¦ãƒ‡ãƒ¼ã‚¿ã‚’èª­ã¿ã¾ã™ï¼ */
     private static final int getDWord(byte ll, byte lh, byte hl, byte hh) {
         return (getWord(hl, hh) & 0xffff) << 16 |
                (getWord(ll, lh) & 0xffff);
     }
 
-    /** ƒŠƒgƒ‹ƒGƒ“ƒfƒBƒAƒ“‚Å 2 Byte ’·‚Ì short ‚Æ‚µ‚Äƒf[ƒ^‚ğ“Ç‚İ‚Ü‚·D */
+    /** ãƒªãƒˆãƒ«ã‚¨ãƒ³ãƒ‡ã‚£ã‚¢ãƒ³ã§ 2 Byte é•·ã® short ã¨ã—ã¦ãƒ‡ãƒ¼ã‚¿ã‚’èª­ã¿ã¾ã™ï¼ */
     private static final short getWord(byte l, byte h) {
             return (short) ((h & 0xff) << 8 | (l & 0xff));
     }
 
     /**
-     * ƒwƒbƒ_•¶š‚ğŠm”F‚µ‚Ü‚·D
+     * ãƒ˜ãƒƒãƒ€æ–‡å­—ã‚’ç¢ºèªã—ã¾ã™ï¼
      */
     private static final boolean checkHeader(String header,
 				       byte b1, byte b2, byte b3, byte b4) {

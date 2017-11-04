@@ -20,7 +20,7 @@ import vavi.util.Debug;
 
 
 /**
- * ValueRecode ‚Ìƒe[ƒuƒ‹ƒ‚ƒfƒ‹‚Å‚·D
+ * ValueRecode ã®ãƒ†ãƒ¼ãƒ–ãƒ«ãƒ¢ãƒ‡ãƒ«ã§ã™ï¼
  * 
  * @author <a href="mailto:vavivavi@yahoo.co.jp">Naohide Sano</a> (nsano)
  * @version 0.00 990630 nsano initial version <br>
@@ -28,47 +28,47 @@ import vavi.util.Debug;
  */
 public class ValueRecodeTableModel extends AbstractTableModel {
 
-    /** ƒf[ƒ^‚Ì–¼‘O‚Ì”z—ñ */
+    /** ãƒ‡ãƒ¼ã‚¿ã®åå‰ã®é…åˆ— */
     List<JLabel> names = new ArrayList<JLabel>();
 
-    /** ƒf[ƒ^‚Ì’l‚Ì”z—ñ */
+    /** ãƒ‡ãƒ¼ã‚¿ã®å€¤ã®é…åˆ— */
     List<Object> values = new ArrayList<Object>();
 
-    /** ƒJƒ‰ƒ€”‚ğ•Ô‚µ‚Ü‚·D */
+    /** ã‚«ãƒ©ãƒ æ•°ã‚’è¿”ã—ã¾ã™ï¼ */
     public int getColumnCount() {
         return 2;
     }
 
-    /** s”‚ğ•Ô‚µ‚Ü‚·D */
+    /** è¡Œæ•°ã‚’è¿”ã—ã¾ã™ï¼ */
     public int getRowCount() {
         return names.size();
     }
 
-    /** ”’l‚Æ‚µ‚Ä’l‚ğ’Ç‰Á‚µ‚Ü‚·D */
+    /** æ•°å€¤ã¨ã—ã¦å€¤ã‚’è¿½åŠ ã—ã¾ã™ï¼ */
     public void addValue(String name, int value) {
         names.add(new JLabel(name, UIManager.getIcon("registryViewer.binaryIcon"), SwingConstants.LEFT));
         values.add(new Integer(value));
     }
 
-    /** •¶š—ñ‚Æ‚µ‚Ä’l‚ğ’Ç‰Á‚µ‚Ü‚·D */
+    /** æ–‡å­—åˆ—ã¨ã—ã¦å€¤ã‚’è¿½åŠ ã—ã¾ã™ï¼ */
     public void addValue(String name, String value) {
-        names.add(new JLabel(name.equals("") ? "(•W€)" : name, UIManager.getIcon("registryViewer.stringIcon"), SwingConstants.LEFT));
+        names.add(new JLabel(name.equals("") ? "(æ¨™æº–)" : name, UIManager.getIcon("registryViewer.stringIcon"), SwingConstants.LEFT));
         values.add(value);
     }
 
-    /** ƒoƒCƒiƒŠƒf[ƒ^‚Æ‚µ‚Ä’l‚ğ’Ç‰Á‚µ‚Ü‚·D */
+    /** ãƒã‚¤ãƒŠãƒªãƒ‡ãƒ¼ã‚¿ã¨ã—ã¦å€¤ã‚’è¿½åŠ ã—ã¾ã™ï¼ */
     public void addValue(String name, byte[] value) {
         names.add(new JLabel(name, UIManager.getIcon("registryViewer.binaryIcon"), SwingConstants.LEFT));
         values.add(value);
     }
 
-    /** –¢’m‚ÌŒ^‚Æ‚µ‚Ä’l‚ğ’Ç‰Á‚µ‚Ü‚·D */
+    /** æœªçŸ¥ã®å‹ã¨ã—ã¦å€¤ã‚’è¿½åŠ ã—ã¾ã™ï¼ */
     public void addValue(String name, byte[] value, int type) {
         names.add(new JLabel(name, UIManager.getIcon("registryViewer.unknownIcon"), SwingConstants.LEFT));
         values.add(value);
     }
 
-    /** w’è‚µ‚½ƒJƒ‰ƒ€‚ª•ÒW‰Â”\‚©‚Ç‚¤‚©‚ğ•Ô‚µ‚Ü‚·D */
+    /** æŒ‡å®šã—ãŸã‚«ãƒ©ãƒ ãŒç·¨é›†å¯èƒ½ã‹ã©ã†ã‹ã‚’è¿”ã—ã¾ã™ï¼ */
     public boolean isCellEditable(int c) {
         if (c == 1)
             return true;
@@ -76,7 +76,7 @@ public class ValueRecodeTableModel extends AbstractTableModel {
             return false;
     }
 
-    /** w’è‚µ‚½ƒJƒ‰ƒ€‚ÌƒNƒ‰ƒX‚ğ•Ô‚µ‚Ü‚·D */
+    /** æŒ‡å®šã—ãŸã‚«ãƒ©ãƒ ã®ã‚¯ãƒ©ã‚¹ã‚’è¿”ã—ã¾ã™ï¼ */
     public Class<?> getColumnClass(int c) {
         if (c == 0) {
             return JLabel.class;
@@ -85,7 +85,7 @@ public class ValueRecodeTableModel extends AbstractTableModel {
         }
     }
 
-    /** w’è‚µ‚½sCƒJƒ‰ƒ€‚Ìƒf[ƒ^‚ğ•Ô‚µ‚Ü‚·D */
+    /** æŒ‡å®šã—ãŸè¡Œï¼Œã‚«ãƒ©ãƒ ã®ãƒ‡ãƒ¼ã‚¿ã‚’è¿”ã—ã¾ã™ï¼ */
     public Object getValueAt(int row, int col) {
         // Debug.println("values: " + getRowCount());
         // Debug.println("cell: " + row + ", " + col);
@@ -115,7 +115,7 @@ Debug.println("col: " + col);
         }
     }
 
-    /** ƒAƒCƒRƒ“‚ğƒ[ƒh‚µ‚Ü‚·D */
+    /** ã‚¢ã‚¤ã‚³ãƒ³ã‚’ãƒ­ãƒ¼ãƒ‰ã—ã¾ã™ï¼ */
     static {
         Class<?> clazz = ValueRecodeTableModel.class;
         UIDefaults table = UIManager.getDefaults();

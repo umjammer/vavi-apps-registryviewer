@@ -1,84 +1,61 @@
-<?xml version="1.0" encoding="Shift_JIS"?>
+<?xml version="1.0" encoding="utf-8"?>
 
 <!-- ////////////////////////////////////////////////////////////////////// -->
 <!-- Copyright (c) 2002 by Naohide Sano, All rights reserved.               -->
 <!--                                                                        -->
 <!-- Written by Naohide Sano                                                -->
 <!--                                                                        -->
-<!-- vavi.apps.registryViewer                                               -->
+<!-- vavi-apps-registryViewer                                               -->
 <!--                                                                        -->
-<!-- @author	Naohide Sano                                                -->
-<!-- @version	0.00	020522	nsano	initial version                     -->
+<!-- @author Naohide Sano                                                   -->
+<!-- @version 0.00 020522 nsano initial version                             -->
 <!--                                                                        -->
 <!-- ////////////////////////////////////////////////////////////////////// -->
 
-<project default="run" basedir=".">
+<project name="vavi-apps-registryViewer " default="run" basedir="."
+  xmlns:artifact="urn:maven-artifact-ant">
 
-<!-- クラスパスの定義 -->
-<path id="project.class.path">
-    <!-- 必要なライブラリを定義する -->
-    <pathelement location="../../.." />
-</path>
-
-<!-- ターゲットの定義 -->
-
-<!-- clean -->
-<target name="clean" description="ビルド環境のクリア">
-  <delete file="RegistroyViewer.jar" />
-  <delete>
-   <fileset dir=".">
-    <include name="*.class" />
-   </fileset>
-  </delete>
-</target>
-
-<!-- javac -->
-<target name="compile" description="コンパイル">
-  <javac debug="on">
-    <classpath refid="project.class.path" />
-    <include name="*.java" />
-    <include name="vavi/util/win32/registry/*.java" />
-    <src path="." />
-    <src path="../../.." />
-  </javac>
-</target>
-
-<!-- jar -->
-<target name="packaging" depends="compile" description="パッケージング">
-  <jar jarfile="./RegistryViewer.jar" manifest="manifest.mf" compress="false">
-    <fileset dir=".">
-      <exclude name="**/**" />
+  <path id="maven-ant-tasks.classpath">
+    <fileset dir="${user.home}/lib/java/maven-ant-tasks">
+      <include name="*.jar" />
     </fileset>
-    <fileset dir="../../..">
-      <include name="vavi/apps/registryViewer/*.class" />
-      <include name="vavi/apps/registryViewer/images/*.gif" />
-      <include name="vavi/util/Debug*.class" />
-      <include name="vavi/util/RegexFileFilter*.class" />
-      <include name="vavi/util/win32/registry/*.class" />
-    </fileset>
-  </jar>
-</target>
+  </path>
+  <typedef resource="org/apache/maven/artifact/ant/antlib.xml"
+           uri="urn:maven-artifact-ant"
+           classpathref="maven-ant-tasks.classpath" />
 
-<!-- run -->
-<target name="run" depends="compile" description="プログラムの実行">
-  <java classname="vavi.apps.registryViewer.RegistryViewer" fork="yes">
-    <jvmarg value="-Duser.home=c:/home/nsano" />
-    <classpath refid="project.class.path"/>
-    <arg value="USER.DAT" />
-  </java>
-</target>
+  <property environment="env" />
+  <property file="local.properties" />
 
-<!-- go -->
-<target name="go" depends="packaging" description="プログラムの実行">
-  <java classname="vavi.apps.registryViewer.RegistryViewer" fork="yes">
-    <classpath>
-      <fileset dir=".">
-        <include name="RegistroyViewer.jar" />
-      </fileset>
-    </classpath>
-    <arg value="USER.DAT" />
-  </java>
-</target>
+  <xmlproperty file="pom.xml" />
+
+  <!-- Path Definitions -->
+  <path id="project.class.path">
+    <pathelement location="${javac.dest.test}" />
+    <pathelement location="${javac.dest}" />
+    <fileset refid="maven-ant-tasks.dependency.fileset" />
+  </path>
+
+  <!-- prepare -->
+  <target name="prepare" description="Preparing">
+    <artifact:pom file="pom.xml" id="maven.project" />
+    <artifact:dependencies fileSetId="maven-ant-tasks.dependency.fileset">
+      <pom refid="maven.project" />
+    </artifact:dependencies>
+    <artifact:mvn pom="pom.xml">
+      <arg value="package" />
+      <arg value="-Dmaven.test.skip=true"/>
+    </artifact:mvn>
+  </target>
+
+  <!-- run -->
+  <target name="run" depends="prepare" description="繝励Ο繧ｰ繝ｩ繝縺ｮ螳溯｡�">
+    <java classname="vavi.apps.registryViewer.RegistryViewer" fork="yes">
+      <jvmarg value="-Duser.home=${user.home}" />
+      <classpath refid="project.class.path"/>
+      <arg value="USER.DAT" />
+    </java>
+  </target>
 
 </project>
 

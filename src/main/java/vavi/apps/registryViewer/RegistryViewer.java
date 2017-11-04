@@ -52,7 +52,7 @@ import vavi.util.RegexFileFilter;
 
 
 /**
- * ƒŒƒWƒXƒgƒŠƒrƒ…[ƒA‚Å‚·D
+ * ãƒ¬ã‚¸ã‚¹ãƒˆãƒªãƒ“ãƒ¥ãƒ¼ã‚¢ã§ã™ï¼
  * 
  * @author <a href="mailto:vavivavi@yahoo.co.jp">Naohide Sano</a> (nsano)
  * @version 0.00 990630 nsano initial version <br>

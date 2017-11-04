@@ -14,14 +14,14 @@ import vavi.util.win32.registry.Registry;
 
 
 /**
- * ƒcƒŠ[ƒm[ƒh‚Ìƒ†[ƒUƒIƒuƒWƒFƒNƒg‚Å‚·D {@link vavi.util.win32.registry.Registry} ‚ÌÀ‘•‚ÌƒTƒ“ƒvƒ‹‚É‚È‚Á‚Ä‚¢‚Ü‚·D
+ * ãƒ„ãƒªãƒ¼ãƒãƒ¼ãƒ‰ã®ãƒ¦ãƒ¼ã‚¶ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã§ã™ï¼ {@link vavi.util.win32.registry.Registry} ã®å®Ÿè£…ã®ã‚µãƒ³ãƒ—ãƒ«ã«ãªã£ã¦ã„ã¾ã™ï¼
  * <ul>
- * <li>ƒRƒ“ƒXƒgƒ‰ƒNƒ^‚ğƒI[ƒoƒ‰ƒCƒh‚·‚é
- * <li>getRoot ƒƒ\ƒbƒh‚ğ’Ç‰Á‚·‚é (super.getRoot ‚ğg—p)
- * <li>TreeRecodeImpl ‚ğŒp³‚µ‚½ƒNƒ‰ƒX‚ğì¬‚·‚é
+ * <li>ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ã‚’ã‚ªãƒ¼ãƒãƒ©ã‚¤ãƒ‰ã™ã‚‹
+ * <li>getRoot ãƒ¡ã‚½ãƒƒãƒ‰ã‚’è¿½åŠ ã™ã‚‹ (super.getRoot ã‚’ä½¿ç”¨)
+ * <li>TreeRecodeImpl ã‚’ç¶™æ‰¿ã—ãŸã‚¯ãƒ©ã‚¹ã‚’ä½œæˆã™ã‚‹
  * <ul>
- * <li>ƒRƒ“ƒXƒgƒ‰ƒNƒ^‚ğƒI[ƒoƒ‰ƒCƒh‚·‚é
- * <li>ƒ†[ƒU‚ªg—p‚·‚éƒf[ƒ^‚ğ•Ô‚·ƒƒ\ƒbƒh‚ğ’Ç‰Á‚·‚é (getKeySize, getValueName, getValueDataXXX ‚ğg—p)
+ * <li>ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ã‚’ã‚ªãƒ¼ãƒãƒ©ã‚¤ãƒ‰ã™ã‚‹
+ * <li>ãƒ¦ãƒ¼ã‚¶ãŒä½¿ç”¨ã™ã‚‹ãƒ‡ãƒ¼ã‚¿ã‚’è¿”ã™ãƒ¡ã‚½ãƒƒãƒ‰ã‚’è¿½åŠ ã™ã‚‹ (getKeySize, getValueName, getValueDataXXX ã‚’ä½¿ç”¨)
  * </ul>
  * </ul>
  * 
@@ -32,28 +32,28 @@ import vavi.util.win32.registry.Registry;
  */
 public class ValueRecode extends Registry {
 
-    /** ƒŒƒWƒXƒgƒŠ‚ÌÀ‘•‚ğ\’z‚µ‚Ü‚·D */
+    /** ãƒ¬ã‚¸ã‚¹ãƒˆãƒªã®å®Ÿè£…ã‚’æ§‹ç¯‰ã—ã¾ã™ï¼ */
     public ValueRecode(InputStream is) throws IOException {
         super(is);
     }
 
-    /** ƒŒƒWƒXƒgƒŠ‚Ìƒ‹[ƒg‚ğæ“¾‚µ‚Ü‚·D */
+    /** ãƒ¬ã‚¸ã‚¹ãƒˆãƒªã®ãƒ«ãƒ¼ãƒˆã‚’å–å¾—ã—ã¾ã™ï¼ */
     public TreeRecode getRoot() {
         return (TreeRecode) super.getRoot(TreeRecode.class);
     }
 
-    /** ƒŒƒWƒXƒgƒŠƒcƒŠ[‚Ì‚PƒŒƒR[ƒh‚Å‚·D */
+    /** ãƒ¬ã‚¸ã‚¹ãƒˆãƒªãƒ„ãƒªãƒ¼ã®ï¼‘ãƒ¬ã‚³ãƒ¼ãƒ‰ã§ã™ï¼ */
     public class TreeRecode extends TreeRecodeImpl {
 
         /** Value to display. */
         private ValueRecodeTableModel value;
 
-        /** TreeRecode ‚ğ\’z‚µ‚Ü‚·D */
+        /** TreeRecode ã‚’æ§‹ç¯‰ã—ã¾ã™ï¼ */
         public TreeRecode(int offset) {
             super(offset);
         }
 
-        /** ƒe[ƒuƒ‹—p‚Ìƒf[ƒ^‚ğæ“¾‚µ‚Ü‚·D */
+        /** ãƒ†ãƒ¼ãƒ–ãƒ«ç”¨ã®ãƒ‡ãƒ¼ã‚¿ã‚’å–å¾—ã—ã¾ã™ï¼ */
         public ValueRecodeTableModel getValue() {
 
             if (value == null) {

@@ -11,7 +11,7 @@ import javax.swing.table.DefaultTableCellRenderer;
 
 
 /**
- * ƒe[ƒuƒ‹‚ÌƒZƒ‹ƒŒƒ“ƒ_ƒ‰‚Å‚·D
+ * ãƒ†ãƒ¼ãƒ–ãƒ«ã®ã‚»ãƒ«ãƒ¬ãƒ³ãƒ€ãƒ©ã§ã™ï¼
  * 
  * @author <a href="mailto:vavivavi@yahoo.co.jp">Naohide Sano</a> (nsano)
  * @version 0.00 990630 nsano initial version <br>

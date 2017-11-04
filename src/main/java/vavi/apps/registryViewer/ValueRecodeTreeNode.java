@@ -11,18 +11,18 @@ import javax.swing.tree.TreeNode;
 
 
 /**
- * ValueRecode ‚ÌƒcƒŠ[ƒm[ƒh‚Å‚·D {@link vavi.util.win32.registry.Registry} ‚ÌÀ‘•‚ÌƒTƒ“ƒvƒ‹‚É‚È‚Á‚Ä‚¢‚Ü‚·D ˆêŠK‘w‰º‚Ì“WŠJ‚Ìd•û
+ * ValueRecode ã®ãƒ„ãƒªãƒ¼ãƒãƒ¼ãƒ‰ã§ã™ï¼ {@link vavi.util.win32.registry.Registry} ã®å®Ÿè£…ã®ã‚µãƒ³ãƒ—ãƒ«ã«ãªã£ã¦ã„ã¾ã™ï¼ ä¸€éšå±¤ä¸‹ã®å±•é–‹ã®ä»•æ–¹
  * 
  * <pre><tt>
  * 
- *   Foo.BarExtendsRegistryTreeRecodeImpl tr = ... // ƒJƒŒƒ“ƒg‚ğæ“¾
+ *   Foo.BarExtendsRegistryTreeRecodeImpl tr = ... // ã‚«ãƒ¬ãƒ³ãƒˆã‚’å–å¾—
  * 
- *   if (tr.hasChildTreeRecodes()) {	 // q‹Ÿ‚ª‚ ‚é‚©‚Ç‚¤‚©
- * 	tr = tr.get1stChildTreeRecode(); // Å‰‚Ìq‹Ÿ‚ğæ“¾‚µƒ|ƒCƒ“ƒ^‚ğˆÚ“®
+ *   if (tr.hasChildTreeRecodes()) {	 // å­ä¾›ãŒã‚ã‚‹ã‹ã©ã†ã‹
+ * 	tr = tr.get1stChildTreeRecode(); // æœ€åˆã®å­ä¾›ã‚’å–å¾—ã—ãƒã‚¤ãƒ³ã‚¿ã‚’ç§»å‹•
  * 	...
  * 
- * 	while (tr.hasNextTreeRecode()) { // Ÿ‚ª‚ ‚é‚©‚Ç‚¤‚©
- * 	    tr = tr.getNextTreeRecode(); // Ÿ‚ğæ“¾‚µƒ|ƒCƒ“ƒ^‚ğˆÚ“®
+ * 	while (tr.hasNextTreeRecode()) { // æ¬¡ãŒã‚ã‚‹ã‹ã©ã†ã‹
+ * 	    tr = tr.getNextTreeRecode(); // æ¬¡ã‚’å–å¾—ã—ãƒã‚¤ãƒ³ã‚¿ã‚’ç§»å‹•
  * 	    ...
  * 	}
  *   }
@@ -57,7 +57,7 @@ public class ValueRecodeTreeNode extends DefaultMutableTreeNode {
         return super.getChildCount();
     }
 
-    /** •¶š—ñ‚ªƒf[ƒ^‚ÉŠÜ‚Ü‚ê‚Ä‚¢‚é‚©‚ğ•Ô‚µ‚Ü‚·D */
+    /** æ–‡å­—åˆ—ãŒãƒ‡ãƒ¼ã‚¿ã«å«ã¾ã‚Œã¦ã„ã‚‹ã‹ã‚’è¿”ã—ã¾ã™ï¼ */
     public boolean contains(String str) {
         if (((ValueRecode.TreeRecode) userObject).getKeyName().toLowerCase().indexOf(str.toLowerCase()) != -1)
             return true;
@@ -65,7 +65,7 @@ public class ValueRecodeTreeNode extends DefaultMutableTreeNode {
         return ((ValueRecode.TreeRecode) userObject).contains(str);
     }
 
-    /** ƒ‹[ƒg‚©‚ç‚ÌƒpƒX–¼‚ğæ“¾‚µ‚Ü‚·D */
+    /** ãƒ«ãƒ¼ãƒˆã‹ã‚‰ã®ãƒ‘ã‚¹åã‚’å–å¾—ã—ã¾ã™ï¼ */
     public String getAbsoluteName() {
         TreeNode[] nodes = getPath();
         String name = new String();

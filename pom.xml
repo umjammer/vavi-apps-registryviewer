@@ -19,29 +19,35 @@
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
-          <source>1.5</source>
-          <target>1.5</target>
-          <encoding>Windows-31J</encoding>
-          <executable>${JAVA_HOME}/bin/java</executable>
+          <source>8</source>
+          <target>8</target>
+          <encoding>UTF-8</encoding>
         </configuration>
       </plugin>
     </plugins>
   </build>
   <repositories>
+    <repository>
+      <id>jitpack.io</id>
+      <url>https://jitpack.io</url>
+    </repository>
   </repositories>
   <dependencies>
-  	<dependency>
-  		<groupId>junit</groupId>
-  		<artifactId>junit</artifactId>
-  		<version>4.5</version>
-  		<scope>test</scope>
-  		<optional>false</optional>
-  	</dependency>
     <dependency>
-        <groupId>vavi</groupId>
-        <artifactId>vavi-commons</artifactId>
-        <version>1.0.0</version>
-        <optional>false</optional>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.5</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.github.umjammer</groupId>
+      <artifactId>vavi-commons</artifactId>
+      <version>1.0.6</version>
+    </dependency>
+    <dependency>
+      <groupId>com.github.umjammer</groupId>
+      <artifactId>vavi-awt</artifactId>
+      <version>1.0.1</version>
     </dependency>
   </dependencies>
 </project>

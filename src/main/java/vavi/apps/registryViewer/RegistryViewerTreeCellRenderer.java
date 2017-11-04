@@ -16,7 +16,7 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 
 
 /**
- * ƒcƒŠ[ƒm[ƒh‚ÌƒZƒ‹ƒŒƒ“ƒ_ƒ‰‚Å‚·D
+ * ãƒ„ãƒªãƒ¼ãƒãƒ¼ãƒ‰ã®ã‚»ãƒ«ãƒ¬ãƒ³ãƒ€ãƒ©ã§ã™ï¼
  * 
  * @author <a href="mailto:vavivavi@yahoo.co.jp">Naohide Sano</a> (nsano)
  * @version 0.00 990630 nsano initial version <br>
