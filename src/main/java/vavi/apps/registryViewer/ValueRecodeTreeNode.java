@@ -29,7 +29,7 @@ import javax.swing.tree.TreeNode;
  *  
  * </tt></pre>
  * 
- * @author <a href="mailto:vavivavi@yahoo.co.jp">Naohide Sano</a> (nsano)
+ * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
  * @version 0.00 990630 nsano initial version <br>
  *          1.00 010908 nsano refine <br>
  */
@@ -59,7 +59,7 @@ public class ValueRecodeTreeNode extends DefaultMutableTreeNode {
 
     /** 文字列がデータに含まれているかを返します． */
     public boolean contains(String str) {
-        if (((ValueRecode.TreeRecode) userObject).getKeyName().toLowerCase().indexOf(str.toLowerCase()) != -1)
+        if (((ValueRecode.TreeRecode) userObject).getKeyName().toLowerCase().contains(str.toLowerCase()))
             return true;
         // Debug.println(userObject.getClass().getName());
         return ((ValueRecode.TreeRecode) userObject).contains(str);
@@ -68,10 +68,10 @@ public class ValueRecodeTreeNode extends DefaultMutableTreeNode {
     /** ルートからのパス名を取得します． */
     public String getAbsoluteName() {
         TreeNode[] nodes = getPath();
-        String name = new String();
+        String name = "";
 
-        for (int i = 0; i < nodes.length; i++) {
-            name += ((ValueRecode.TreeRecode) ((ValueRecodeTreeNode) nodes[i]).getUserObject()).getKeyName() + "\\";
+        for (TreeNode node : nodes) {
+            name += ((ValueRecode.TreeRecode) ((ValueRecodeTreeNode) node).getUserObject()).getKeyName() + "\\";
         }
 
         return name.substring(0, name.length() - 1);

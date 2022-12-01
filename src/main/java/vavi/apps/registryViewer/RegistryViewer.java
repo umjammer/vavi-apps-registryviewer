@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.Vector;
 
 import javax.swing.AbstractAction;
@@ -54,7 +55,7 @@ import vavi.util.RegexFileFilter;
 /**
  * レジストリビューアです．
  * 
- * @author <a href="mailto:vavivavi@yahoo.co.jp">Naohide Sano</a> (nsano)
+ * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
  * @version 0.00 990630 nsano initial version <br>
  *          1.00 010908 nsano refine <br>
  *          1.01 020430 nsano change VlueRecode::<init> arg <br>
@@ -153,18 +154,18 @@ public class RegistryViewer {
 
     /** */
     private void open(File file) throws IOException {
-        InputStream is = new BufferedInputStream(new FileInputStream(file));
+        InputStream is = new BufferedInputStream(Files.newInputStream(file.toPath()));
         valueRecode = new ValueRecode(is);
 
         searchResults.removeAllElements();
 
         /* Create the JTreeModel. */
-        TreeNode root = new ValueRecodeTreeNode(valueRecode.getRoot());
+        ValueRecodeTreeNode root = new ValueRecodeTreeNode(valueRecode.getRoot());
         treeModel = new DefaultTreeModel(root);
 
         tree.setModel(treeModel);
 
-        fillTable((ValueRecodeTreeNode) root);
+        fillTable(root);
     }
 
     /** */
@@ -181,7 +182,7 @@ public class RegistryViewer {
         JToolBar toolBar = new JToolBar();
         JButton button;
         // ImageIcon icon;
-        final Insets insets0 = new Insets(0, 0, 0, 0);
+        Insets insets0 = new Insets(0, 0, 0, 0);
 
 //      toolBar.setMargin(insets0);
         toolBar.setFloatable(false);
@@ -192,14 +193,10 @@ public class RegistryViewer {
         button.setToolTipText(button.getText());
         button.setText("");
 
-        searchTexts = (JComboBox) toolBar.add(new JComboBox());
+        searchTexts = (JComboBox) toolBar.add(new JComboBox<>());
         searchTexts.setEditable(true);
         searchTexts.setSize(40, 16);
-        searchTexts.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent ev) {
-                searchAction.actionPerformed(ev);
-            }
-        });
+        searchTexts.addActionListener(ev -> searchAction.actionPerformed(ev));
 
         button = (JButton) toolBar.add(new JButton(searchAction));
         button.setMargin(insets0);
@@ -238,7 +235,7 @@ public class RegistryViewer {
     };
 
     /** Search results of TreePath objects */
-    private Vector<TreePath> searchResults = new Vector<TreePath>();
+    private Vector<TreePath> searchResults = new Vector<>();
 
     /** The search action */
     private Action searchAction = new AbstractAction("Search", UIManager.getIcon("registryViewer.searchIcon")) {
@@ -255,7 +252,7 @@ public class RegistryViewer {
 
             // clear if search text changed
 
-            if (!((String) searchTexts.getSelectedItem()).equals(text)) {
+            if (!searchTexts.getSelectedItem().equals(text)) {
                 searchResults.removeAllElements();
                 text = (String) searchTexts.getSelectedItem();
             }
@@ -365,7 +362,7 @@ public class RegistryViewer {
 
     // -------------------------------------------------------------------------
 
-    /** */
+    /* */
     static {
         Toolkit t = Toolkit.getDefaultToolkit();
         Class<?> clazz = RegistryViewer.class;

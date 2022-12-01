@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Constructor;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -23,7 +25,7 @@ import vavi.util.StringUtil;
 /**
  * Windows のレジストリ情報を表すクラスです．
  * 
- * @author <a href="mailto:vavivavi@yahoo.co.jp">Naohide Sano</a> (nsano)
+ * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
  * @version 0.00 990629 nsano initial version <br>
  *          1.00 010908 nsano refine <br>
  *          1.01 020430 nsano change <init> arg <br>
@@ -143,12 +145,12 @@ for(int j = 0; j < ps.length; j++) {
 Debug.println(ps[j].getName());
 }}*/
             Constructor<?> c = inner.getConstructor(this.getClass(), Integer.TYPE);
-            Object treeRecode = c.newInstance(this, new Integer(offset));
+            Object treeRecode = c.newInstance(this, offset);
 
             return (TreeRecode) treeRecode;
         } catch (Exception e) {
 Debug.printStackTrace(e);
-            throw (RuntimeException) new IllegalStateException().initCause(e);
+            throw (RuntimeException) new IllegalStateException(e);
         }
     }
 
@@ -180,9 +182,7 @@ Debug.println("no rgdb data, maybe root");
             int index = getIdNumber();
 //Debug.println("index: " + "0x" + StringUtil.toHex8(index));
 
-            Iterator<RGDBRecode> e = rgdb.rrs.iterator();
-            while (e.hasNext()) {
-                RGDBRecode rr = e.next();
+            for (RGDBRecode rr : rgdb.rrs) {
                 if (rr.idNumber == index) {
 //Debug.println("id: " + numberOfRGDB + "-" + numberInRGDB);
                     rgdbRecode = rr;
@@ -433,7 +433,7 @@ Debug.println("idNumber: " + "0x" + StringUtil.toHex8(idNumber));
         /** RGDB のサイズ */
         int size;
         /** RGDBRecode のベクタ */
-        List<RGDBRecode> rrs = new ArrayList<RGDBRecode>();
+        List<RGDBRecode> rrs = new ArrayList<>();
         
         /** RGDB を構築します． */
         RGDB(int offset)	{
@@ -569,7 +569,7 @@ Debug.println(e);
             }
             
             for (int i = 0; i < textLength; i++) {
-                if (name[i] < 0x80) {
+                if (name[i] < (byte) 0x80) {
                     hash += name[i];
                 }
             }
@@ -680,21 +680,21 @@ Debug.println("data: unknown(" + type + ")");
     //-------------------------------------------------------------------------
 
     /** リトルエンディアンで 4 Byte 長の int としてデータを読みます． */
-    private static final int getDWord(byte ll, byte lh, byte hl, byte hh) {
+    private static int getDWord(byte ll, byte lh, byte hl, byte hh) {
         return (getWord(hl, hh) & 0xffff) << 16 |
                (getWord(ll, lh) & 0xffff);
     }
 
     /** リトルエンディアンで 2 Byte 長の short としてデータを読みます． */
-    private static final short getWord(byte l, byte h) {
+    private static short getWord(byte l, byte h) {
             return (short) ((h & 0xff) << 8 | (l & 0xff));
     }
 
     /**
      * ヘッダ文字を確認します．
      */
-    private static final boolean checkHeader(String header,
-				       byte b1, byte b2, byte b3, byte b4) {
+    private static boolean checkHeader(String header,
+                                       byte b1, byte b2, byte b3, byte b4) {
 
         StringBuilder sb = new StringBuilder();
         
@@ -714,7 +714,7 @@ Debug.println("data: unknown(" + type + ")");
      * @param args registry file
      */
     public static void main(String[] args) throws Exception {
-        InputStream is = new BufferedInputStream(new FileInputStream(args[0]));
+        InputStream is = new BufferedInputStream(Files.newInputStream(Paths.get(args[0])));
         Registry reg = new Registry(is);
     }
 }

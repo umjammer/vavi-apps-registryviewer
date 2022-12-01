@@ -25,7 +25,7 @@ import vavi.util.win32.registry.Registry;
  * </ul>
  * </ul>
  * 
- * @author <a href="mailto:vavivavi@yahoo.co.jp">Naohide Sano</a> (nsano)
+ * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
  * @version 0.00 990630 nsano initial version <br>
  *          1.00 010908 nsano refine <br>
  *          1.01 020430 nsano change <init> arg <br>
@@ -95,7 +95,7 @@ public class ValueRecode extends Registry {
 
             for (int i = 0; i < value.getRowCount(); i++) {
                 // Debug.println(value.getValueAt(i, 1).getClass().getName());
-                if (((String) value.getValueAt(i, 1)).toLowerCase().indexOf(str.toLowerCase()) != -1) {
+                if (((String) value.getValueAt(i, 1)).toLowerCase().contains(str.toLowerCase())) {
                     return true;
                 }
             }

@@ -13,7 +13,7 @@ import javax.swing.table.DefaultTableCellRenderer;
 /**
  * テーブルのセルレンダラです．
  * 
- * @author <a href="mailto:vavivavi@yahoo.co.jp">Naohide Sano</a> (nsano)
+ * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
  * @version 0.00 990630 nsano initial version <br>
  *          1.00 010908 nsano refine <br>
  */

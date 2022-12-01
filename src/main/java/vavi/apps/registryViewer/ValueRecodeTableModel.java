@@ -22,17 +22,17 @@ import vavi.util.Debug;
 /**
  * ValueRecode のテーブルモデルです．
  * 
- * @author <a href="mailto:vavivavi@yahoo.co.jp">Naohide Sano</a> (nsano)
+ * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
  * @version 0.00 990630 nsano initial version <br>
  *          1.00 010908 nsano refine <br>
  */
 public class ValueRecodeTableModel extends AbstractTableModel {
 
     /** データの名前の配列 */
-    List<JLabel> names = new ArrayList<JLabel>();
+    List<JLabel> names = new ArrayList<>();
 
     /** データの値の配列 */
-    List<Object> values = new ArrayList<Object>();
+    List<Object> values = new ArrayList<>();
 
     /** カラム数を返します． */
     public int getColumnCount() {
@@ -47,7 +47,7 @@ public class ValueRecodeTableModel extends AbstractTableModel {
     /** 数値として値を追加します． */
     public void addValue(String name, int value) {
         names.add(new JLabel(name, UIManager.getIcon("registryViewer.binaryIcon"), SwingConstants.LEFT));
-        values.add(new Integer(value));
+        values.add(value);
     }
 
     /** 文字列として値を追加します． */
@@ -69,7 +69,7 @@ public class ValueRecodeTableModel extends AbstractTableModel {
     }
 
     /** 指定したカラムが編集可能かどうかを返します． */
-    public boolean isCellEditable(int c) {
+    public static boolean isCellEditable(int c) {
         if (c == 1)
             return true;
         else
@@ -97,17 +97,17 @@ public class ValueRecodeTableModel extends AbstractTableModel {
                 return "\"" + value + "\"";
             }
             if (value instanceof Integer) {
-                String h = Integer.toHexString(((Integer) value).intValue());
+                String h = Integer.toHexString((Integer) value);
                 h = ("0000000" + h).substring(7 + h.length() - 8);
                 return "0x" + h + "(" + value + ")";
             } else {
-                String tmp = "";
+                StringBuilder tmp = new StringBuilder();
                 byte[] b = (byte[]) value;
-                for (int j = 0; j < b.length; j++) {
-                    String h = Integer.toHexString(b[j] & 0xff).toUpperCase();
-                    tmp += " " + (h.length() == 2 ? "" : "0") + h;
+                for (byte item : b) {
+                    String h = Integer.toHexString(item & 0xff).toUpperCase();
+                    tmp.append(" ").append(h.length() == 2 ? "" : "0").append(h);
                 }
-                return tmp;
+                return tmp.toString();
             }
         } else {
 Debug.println("col: " + col);
@@ -115,7 +115,7 @@ Debug.println("col: " + col);
         }
     }
 
-    /** アイコンをロードします． */
+    /* アイコンをロードします． */
     static {
         Class<?> clazz = ValueRecodeTableModel.class;
         UIDefaults table = UIManager.getDefaults();

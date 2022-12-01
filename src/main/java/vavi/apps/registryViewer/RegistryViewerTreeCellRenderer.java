@@ -18,14 +18,14 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 /**
  * ツリーノードのセルレンダラです．
  * 
- * @author <a href="mailto:vavivavi@yahoo.co.jp">Naohide Sano</a> (nsano)
+ * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
  * @version 0.00 990630 nsano initial version <br>
  *          1.00 010908 nsano refine <br>
  *          1.01 020522 nsano refine <br>
  */
 public class RegistryViewerTreeCellRenderer extends DefaultTreeCellRenderer {
 
-    /** */
+    /* */
     static {
         Class<?> clazz = RegistryViewerTreeCellRenderer.class;
         UIDefaults table = UIManager.getDefaults();
