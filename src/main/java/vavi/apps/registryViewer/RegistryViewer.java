@@ -367,8 +367,8 @@ public class RegistryViewer {
         Toolkit t = Toolkit.getDefaultToolkit();
         Class<?> clazz = RegistryViewer.class;
         UIDefaults table = UIManager.getDefaults();
-        table.put("registryViewer.openIcon", new ImageIcon(t.getImage(clazz.getResource("resources/open.gif"))));
-        table.put("registryViewer.searchIcon", new ImageIcon(t.getImage(clazz.getResource("resources/search.gif"))));
+        table.put("registryViewer.openIcon", new ImageIcon(t.getImage(clazz.getResource("/open.gif"))));
+        table.put("registryViewer.searchIcon", new ImageIcon(t.getImage(clazz.getResource("/search.gif"))));
     }
 
     /** */
