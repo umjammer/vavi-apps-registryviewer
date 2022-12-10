@@ -14,9 +14,11 @@ import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 import javax.swing.tree.DefaultTreeCellRenderer;
 
+import vavi.util.win32.registry.Registry;
+
 
 /**
- * ツリーノードのセルレンダラです．
+ * The cell renderer for the tree node.
  * 
  * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
  * @version 0.00 990630 nsano initial version <br>
@@ -29,9 +31,9 @@ public class RegistryViewerTreeCellRenderer extends DefaultTreeCellRenderer {
     static {
         Class<?> clazz = RegistryViewerTreeCellRenderer.class;
         UIDefaults table = UIManager.getDefaults();
-        table.put("registryViewer.rootIcon", LookAndFeel.makeIcon(clazz, "resources/root.gif"));
-        table.put("registryViewer.collapsedIcon", LookAndFeel.makeIcon(clazz, "resources/collapsed.gif"));
-        table.put("registryViewer.expandedIcon", LookAndFeel.makeIcon(clazz, "resources/expanded.gif"));
+        table.put("registryViewer.rootIcon", LookAndFeel.makeIcon(clazz, "/root.gif"));
+        table.put("registryViewer.collapsedIcon", LookAndFeel.makeIcon(clazz, "/collapsed.gif"));
+        table.put("registryViewer.expandedIcon", LookAndFeel.makeIcon(clazz, "/expanded.gif"));
     }
 
     /**
@@ -52,7 +54,7 @@ public class RegistryViewerTreeCellRenderer extends DefaultTreeCellRenderer {
         else
             setForeground(getTextNonSelectionColor());
 
-        String name = ((ValueRecode.TreeRecode) ((ValueRecodeTreeNode) value).getUserObject()).getKeyName();
+        String name = ((ValueRecordTreeNode) value).getUserObject().toString();
 
         /* Set the image. */
         if ("HKEY_root".equals(name))

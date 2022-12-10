@@ -1,7 +1,5 @@
 /**
- * Windows のレジストリを見るツリービューアプリケーションを提供します．
- * <p>
- * TODO NTレジストリ対応
+ * Provides the tree view application for Windows95 registry viewing.
  *
  * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
  * @version 0.00 010823 nsano initial version

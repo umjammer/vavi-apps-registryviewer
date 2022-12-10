@@ -20,63 +20,60 @@ import vavi.util.Debug;
 
 
 /**
- * ValueRecode のテーブルモデルです．
+ * The table model for ValueRecord.
  * 
  * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
  * @version 0.00 990630 nsano initial version <br>
  *          1.00 010908 nsano refine <br>
  */
-public class ValueRecodeTableModel extends AbstractTableModel {
+public class ValueRecordTableModel extends AbstractTableModel {
 
-    /** データの名前の配列 */
+    /** array of the data names */
     List<JLabel> names = new ArrayList<>();
 
-    /** データの値の配列 */
+    /** array of the data values */
     List<Object> values = new ArrayList<>();
 
-    /** カラム数を返します． */
+    @Override
     public int getColumnCount() {
         return 2;
     }
 
-    /** 行数を返します． */
+    @Override
     public int getRowCount() {
         return names.size();
     }
 
-    /** 数値として値を追加します． */
+    /** Returns a value as number. */
     public void addValue(String name, int value) {
         names.add(new JLabel(name, UIManager.getIcon("registryViewer.binaryIcon"), SwingConstants.LEFT));
         values.add(value);
     }
 
-    /** 文字列として値を追加します． */
+    /** Returns a value as string. */
     public void addValue(String name, String value) {
-        names.add(new JLabel(name.equals("") ? "(標準)" : name, UIManager.getIcon("registryViewer.stringIcon"), SwingConstants.LEFT));
+        names.add(new JLabel(name.isEmpty() ? "(標準)" : name, UIManager.getIcon("registryViewer.stringIcon"), SwingConstants.LEFT));
         values.add(value);
     }
 
-    /** バイナリデータとして値を追加します． */
+    /** Add a value as binary. */
     public void addValue(String name, byte[] value) {
         names.add(new JLabel(name, UIManager.getIcon("registryViewer.binaryIcon"), SwingConstants.LEFT));
         values.add(value);
     }
 
-    /** 未知の型として値を追加します． */
+    /** Add a value as unknown. */
     public void addValue(String name, byte[] value, int type) {
         names.add(new JLabel(name, UIManager.getIcon("registryViewer.unknownIcon"), SwingConstants.LEFT));
         values.add(value);
     }
 
-    /** 指定したカラムが編集可能かどうかを返します． */
+    /** Returns the column is editable or not. */
     public static boolean isCellEditable(int c) {
-        if (c == 1)
-            return true;
-        else
-            return false;
+        return c == 1;
     }
 
-    /** 指定したカラムのクラスを返します． */
+    @Override
     public Class<?> getColumnClass(int c) {
         if (c == 0) {
             return JLabel.class;
@@ -85,10 +82,10 @@ public class ValueRecodeTableModel extends AbstractTableModel {
         }
     }
 
-    /** 指定した行，カラムのデータを返します． */
+    @Override
     public Object getValueAt(int row, int col) {
-        // Debug.println("values: " + getRowCount());
-        // Debug.println("cell: " + row + ", " + col);
+//Debug.println("values: " + getRowCount());
+//Debug.println("cell: " + row + ", " + col);
         if (col == 0)
             return names.get(row);
         else if (col == 1) {
@@ -115,13 +112,13 @@ Debug.println("col: " + col);
         }
     }
 
-    /* アイコンをロードします． */
+    /* load icons */
     static {
-        Class<?> clazz = ValueRecodeTableModel.class;
+        Class<?> clazz = ValueRecordTableModel.class;
         UIDefaults table = UIManager.getDefaults();
-        table.put("registryViewer.stringIcon", LookAndFeel.makeIcon(clazz, "resources/string.gif"));
-        table.put("registryViewer.binaryIcon", LookAndFeel.makeIcon(clazz, "resources/binary.gif"));
-        table.put("registryViewer.unknownIcon", LookAndFeel.makeIcon(clazz, "resources/unknown.gif"));
+        table.put("registryViewer.stringIcon", LookAndFeel.makeIcon(clazz, "/string.gif"));
+        table.put("registryViewer.binaryIcon", LookAndFeel.makeIcon(clazz, "/binary.gif"));
+        table.put("registryViewer.unknownIcon", LookAndFeel.makeIcon(clazz, "/unknown.gif"));
     }
 }
 

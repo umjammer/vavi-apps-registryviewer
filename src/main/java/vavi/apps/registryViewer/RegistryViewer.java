@@ -13,17 +13,13 @@ import java.awt.FlowLayout;
 import java.awt.Insets;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
-import java.util.Vector;
-
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.prefs.Preferences;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.ImageIcon;
@@ -45,24 +41,27 @@ import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
 import vavi.util.Debug;
 import vavi.util.RegexFileFilter;
+import vavi.util.win32.registry.Registry;
 
 
 /**
- * レジストリビューアです．
+ * Registry Viewer application.
  * 
  * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
  * @version 0.00 990630 nsano initial version <br>
  *          1.00 010908 nsano refine <br>
- *          1.01 020430 nsano change VlueRecode::<init> arg <br>
+ *          1.01 020430 nsano change ValueRecord::<init> arg <br>
  *          1.10 020430 nsano refine, no search result bug fix <br>
  *          1.11 020503 nsano refine <br>
  */
 public class RegistryViewer {
+
+    /** */
+    private static final Preferences prefs = Preferences.userNodeForPackage(RegistryViewer.class);
 
     /** Window for showing Tree. */
     private JFrame frame;
@@ -75,7 +74,7 @@ public class RegistryViewer {
 
     private JTable table;
 
-    private ValueRecode valueRecode;
+    private Registry registry;
 
     /**
      * Constructs a new instance of RegistryViewer.
@@ -96,38 +95,42 @@ public class RegistryViewer {
         tc.setHeaderValue("Data");
         tcm.addColumn(tc);
 
-        table = new JTable(new ValueRecodeTableModel(), tcm);
+        table = new JTable(new ValueRecordTableModel(), tcm);
         table.setShowHorizontalLines(false);
         table.setShowVerticalLines(false);
-        table.getColumn("Name").setCellRenderer(new ValueRecodeTableCellRenderer());
+        table.getColumn("Name").setCellRenderer(new ValueRecordTableCellRenderer());
 
 //      ToolTipManager.sharedInstance().registerComponent(table);
 
-        /* Create the tree. */
+        // Create the tree
         tree = new JTree();
 
         open(file);
 
-        tree.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent e) {
-                // fill right table
-                TreePath path = tree.getPathForLocation(e.getX(), e.getY());
-                if (path != null) {
-                    fillTable((ValueRecodeTreeNode) path.getLastPathComponent());
-                }
+//        tree.addMouseListener(new MouseAdapter() {
+//            public void mouseClicked(MouseEvent e) {
+//                // fill right table
+//                TreePath path = tree.getPathForLocation(e.getX(), e.getY());
+//                if (path != null) {
+//                    fillTable((ValueRecordTreeNode) path.getLastPathComponent());
+//                }
+//            }
+//        });
+        tree.addTreeSelectionListener(e -> {
+            for (TreePath path : e.getPaths()) {
+                fillTable((ValueRecordTreeNode) path.getLastPathComponent());
             }
         });
-
         // Enable tool tips for the tree, without this tool tips
         // will not be picked up.
 //      ToolTipManager.sharedInstance().registerComponent(tree);
 
         tree.setCellRenderer(new RegistryViewerTreeCellRenderer());
 
-        /* Make tree ask for the height of each row. */
+        // Make tree ask for the height of each row
         tree.setRowHeight(-1);
 
-        /* Put the Tree in a scroller. */
+        // Put the Tree in a scroller
         JScrollPane left = new JScrollPane(tree);
         left.setPreferredSize(new Dimension(300, 500));
 
@@ -141,7 +144,7 @@ public class RegistryViewer {
 
         JToolBar toolBar = constructToolBar();
 
-        /* And show it. */
+        // And show it
 
         frame.getContentPane().add(BorderLayout.CENTER, sp);
         frame.getContentPane().add(BorderLayout.NORTH, toolBar);
@@ -154,13 +157,12 @@ public class RegistryViewer {
 
     /** */
     private void open(File file) throws IOException {
-        InputStream is = new BufferedInputStream(Files.newInputStream(file.toPath()));
-        valueRecode = new ValueRecode(is);
+        registry = new Registry(Files.newByteChannel(file.toPath()));
 
-        searchResults.removeAllElements();
+        searchResults.clear();
 
         /* Create the JTreeModel. */
-        ValueRecodeTreeNode root = new ValueRecodeTreeNode(valueRecode.getRoot());
+        ValueRecordTreeNode root = new ValueRecordTreeNode(registry, registry.getRoot());
         treeModel = new DefaultTreeModel(root);
 
         tree.setModel(treeModel);
@@ -169,15 +171,38 @@ public class RegistryViewer {
     }
 
     /** */
-    private void fillTable(ValueRecodeTreeNode node) {
-        table.setModel(((ValueRecode.TreeRecode) node.getUserObject()).getValue());
+    private void fillTable(ValueRecordTreeNode node) {
+        Registry.TreeRecord treeRecord = (Registry.TreeRecord) node.getUserObject();
+
+        ValueRecordTableModel value = new ValueRecordTableModel();
+        for (int i = 0; i < treeRecord.getKeySize(); i++) {
+            String name = treeRecord.getValueName(i);
+            switch (treeRecord.getValueType(i)) {
+            case Registry.RegSZ:
+                value.addValue(name, treeRecord.getValueDataAsString(i));
+                break;
+            case Registry.RegBin:
+                value.addValue(name, treeRecord.getValueData(i));
+                break;
+            case Registry.RegDWord:
+                value.addValue(name, treeRecord.getValueDataAsDWord(i));
+                break;
+            default:
+Debug.println("type: Unknown: " + treeRecord.getValueType(i));
+                value.addValue(name, treeRecord.getValueData(i), treeRecord.getValueType(i));
+                break;
+            }
+        }
+        node.setValueRecordTableModel(value);
+        table.setModel(value);
         table.repaint();
     }
 
-    /** The search box on the tool bar */
-    private JComboBox searchTexts;
+    /** The search box on the toolbar */
+    private JComboBox<String> searchTexts;
 
-    /** Creates the tool bar */
+    /** Creates the toolbar */
+    @SuppressWarnings("unchecked")
     private JToolBar constructToolBar() {
         JToolBar toolBar = new JToolBar();
         JButton button;
@@ -193,7 +218,7 @@ public class RegistryViewer {
         button.setToolTipText(button.getText());
         button.setText("");
 
-        searchTexts = (JComboBox) toolBar.add(new JComboBox<>());
+        searchTexts = (JComboBox<String>) toolBar.add(new JComboBox<>());
         searchTexts.setEditable(true);
         searchTexts.setSize(40, 16);
         searchTexts.addActionListener(ev -> searchAction.actionPerformed(ev));
@@ -210,7 +235,7 @@ public class RegistryViewer {
     /** The open action */
     private Action openAction = new AbstractAction("Open", UIManager.getIcon("registryViewer.openIcon")) {
 
-        private String lastPath = System.getProperty("user.dir");
+        private String lastPath = prefs.get("lastPath", System.getProperty("user.dir"));
 
         private JFileChooser fc = new JFileChooser();
 
@@ -226,7 +251,7 @@ public class RegistryViewer {
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 try {
                     open(fc.getSelectedFile());
-                    lastPath = fc.getSelectedFile().getPath();
+                    prefs.put("lastPath", fc.getSelectedFile().getPath());
                 } catch (IOException e) {
                     Debug.printStackTrace(e);
                 }
@@ -235,7 +260,7 @@ public class RegistryViewer {
     };
 
     /** Search results of TreePath objects */
-    private Vector<TreePath> searchResults = new Vector<>();
+    private List<TreePath> searchResults = new ArrayList<>();
 
     /** The search action */
     private Action searchAction = new AbstractAction("Search", UIManager.getIcon("registryViewer.searchIcon")) {
@@ -246,14 +271,14 @@ public class RegistryViewer {
         /** The current index in search result */
         private int index = 0;
 
-        /** */
+        @Override
         public void actionPerformed(ActionEvent ev) {
             addItemToSearchTexts();
 
             // clear if search text changed
 
             if (!searchTexts.getSelectedItem().equals(text)) {
-                searchResults.removeAllElements();
+                searchResults.clear();
                 text = (String) searchTexts.getSelectedItem();
             }
 
@@ -263,7 +288,7 @@ public class RegistryViewer {
 
                 index = 0;
 
-                ValueRecodeTreeNode root = (ValueRecodeTreeNode) treeModel.getRoot();
+                ValueRecordTreeNode root = (ValueRecordTreeNode) treeModel.getRoot();
 
                 searchAll(root, text);
             } else {
@@ -277,23 +302,23 @@ public class RegistryViewer {
             }
 
             if (searchResults.size() > 0) {
-                TreePath path = searchResults.elementAt(index);
+                TreePath path = searchResults.get(index);
                 tree.setSelectionPath(path);
                 tree.scrollPathToVisible(path);
 //              tree.repaint();
-                fillTable((ValueRecodeTreeNode) path.getLastPathComponent());
+                fillTable((ValueRecordTreeNode) path.getLastPathComponent());
 // Debug.println(": done");
             }
-// ValueRecodeTreeNode node = search(root, text); if (node != null) { Debug.println(node.getAbsoluteName()); } else { Debug.println("not found"); }
+// ValueRecordTreeNode node = search(root, text); if (node != null) { Debug.println(node.getAbsoluteName()); } else { Debug.println("not found"); }
         }
 
         /** */
         @SuppressWarnings("unused")
-        private ValueRecodeTreeNode search(ValueRecodeTreeNode parent, String string) {
+        private ValueRecordTreeNode search(ValueRecordTreeNode parent, String string) {
             for (int i = 0; i < parent.getChildCount(); i++) {
-                ValueRecodeTreeNode child = (ValueRecodeTreeNode) parent.getChildAt(i);
+                ValueRecordTreeNode child = (ValueRecordTreeNode) parent.getChildAt(i);
                 if (child.getChildCount() > 0) {
-                    ValueRecodeTreeNode node = search(child, string);
+                    ValueRecordTreeNode node = search(child, string);
                     if (node != null) {
                         return node;
                     }
@@ -307,12 +332,12 @@ public class RegistryViewer {
         }
 
         /** */
-        private void searchAll(ValueRecodeTreeNode parent, String string) {
+        private void searchAll(ValueRecordTreeNode parent, String string) {
             for (int i = 0; i < parent.getChildCount(); i++) {
-                ValueRecodeTreeNode child = (ValueRecodeTreeNode) parent.getChildAt(i);
+                ValueRecordTreeNode child = (ValueRecordTreeNode) parent.getChildAt(i);
                 if (child.contains(string)) {
-// Debug.println(child.getAbsoluteName());
-                    searchResults.addElement(new TreePath(child.getPath()));
+Debug.println(Level.FINER, child.getAbsoluteName());
+                    searchResults.add(new TreePath(child.getPath()));
                 }
                 if (child.getChildCount() > 0) {
                     searchAll(child, string);
@@ -351,16 +376,14 @@ public class RegistryViewer {
         menu.addSeparator();
 
         menuItem = menu.add(new AbstractAction("Exit") {
-            public void actionPerformed(ActionEvent e) {
-                System.exit(0);
+            @Override public void actionPerformed(ActionEvent e) {
+                frame.setVisible(false);
             }
         });
         menuItem.setMnemonic('x');
 
         return menuBar;
     }
-
-    // -------------------------------------------------------------------------
 
     /* */
     static {
@@ -373,7 +396,6 @@ public class RegistryViewer {
 
     /** */
     public static void main(String[] args) throws Exception {
-//      UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         new RegistryViewer(new File(args[0]));
     }
 }
