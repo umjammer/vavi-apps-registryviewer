@@ -6,668 +6,572 @@
 
 package vavi.util.win32.registry;
 
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Constructor;
+import java.nio.channels.SeekableByteChannel;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
 
+import vavi.util.ByteUtil;
 import vavi.util.Debug;
-import vavi.util.StringUtil;
+import vavi.util.serdes.Element;
+import vavi.util.serdes.Serdes;
 
 
 /**
- * Windows のレジストリ情報を表すクラスです．
- * 
- * @author <a href="mailto:vavivavi@yahoo.co.jp">Naohide Sano</a> (nsano)
+ * Registry represents Windows registry structure (CREG).
+ *
+ * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
  * @version 0.00 990629 nsano initial version <br>
  *          1.00 010908 nsano refine <br>
  *          1.01 020430 nsano change <init> arg <br>
  *          1.02 030606 nsano chnage error trap <br>
+ * @see "https://github.com/libyal/libcreg/blob/main/documentation/Windows%209x%20Registry%20File%20(CREG)%20format.asciidoc"
+ * @see "https://github.com/yuval1024/Samba/blob/ed3ab6ec48e635ab4aaef445e67454b023d02efb/Samba/source/lib/registry/reg_backend_w95.c"
  */
 public class Registry {
 
-    /** 文字列のデータ型 */
+    /** data type for string */
     public static final int RegSZ = 0x00000001;
-    /** バイナリのデータ型 */
+    /** data type for binary */
     public static final int RegBin = 0x00000003;
-    /** 数値のデータ型 */
+    /** data type for number */
     public static final int RegDWord = 0x00000004;
-
-    /** レジストリファイルのバッファ */
-    private byte[] memory;
 
     /** CREG */
     private CREG creg;
     /** RGKN */
     private RGKN rgkn;
-    /** RGDB のベクタ */
+    /** RGDBs */
     private RGDB[] rgdbs;
 
     /** The encoding */
     private static final String encoding = "JISAutoDetect";
 
+    /** */
+    private SeekableByteChannel sbc;
+
     /**
-     * レジストリをストリームから構築します．
+     * Create registry from a stream.
      *
      * <pre>
      * CREG
      * RGKN
-     *  TreeRecode[0]	???
-     *  TreeRecode[1]
-     *  TreeRecode[2]
+     *  TreeRecord[0]	???
+     *  TreeRecord[1]
+     *  TreeRecord[2]
      *  :
      * RGDB[0]
-     *  RGDBRecode[0]
-     *   ValueRecode[0]
-     *   ValueRecode[1]
-     *   ValueRecode[2]
+     *  RGDBRecord[0]
+     *   ValueRecord[0]
+     *   ValueRecord[1]
+     *   ValueRecord[2]
      *   :
-     *  RGDBRecode[1]
-     *  RGDBRecode[2]
+     *  RGDBRecord[1]
+     *  RGDBRecord[2]
      *  :
      * RGDB[1]
      * RGDB[2]
      * :
      * </pre>
      *
-     * @param is a registry file stream
+     * @param sbc a registry file stream
      * @throws IOException if an error occurs
      */
-    public Registry(InputStream is) throws IOException {
-
-        memory = new byte[is.available()];
-
-        int l = 0;
-Debug.println("stream length: " + is.available());
-	    while (l < is.available()) {
-            l += is.read(memory, l, is.available() - l);
-        }
+    public Registry(SeekableByteChannel sbc) throws IOException {
+        this.sbc = sbc;
 
         creg = new CREG();
+        Serdes.Util.deserialize(sbc, creg);
+Debug.println(Level.FINE, creg);
         rgkn = new RGKN();
+        Serdes.Util.deserialize(sbc, rgkn);
+Debug.println(Level.FINE, rgkn);
 
+        sbc.position(creg.offsetOf1stRGDB);
+Debug.printf(Level.FINE, "[0] pos: %08x", sbc.position());
         rgdbs = new RGDB[creg.numberOfRGDB];
-        int o = creg.offsetOf1stRGDB;
+
         for (int i = 0; i < creg.numberOfRGDB; i++) {
-//Debug.println("RGDB: " + i);
-//Debug.println("offset: " + o);
-//if (i == 79) f = true;
-            rgdbs[i] = new RGDB(o);
-            o += rgdbs[i].size;
+
+            rgdbs[i] = new RGDB();
+            Serdes.Util.deserialize(sbc, rgdbs[i]);
+Debug.printf(Level.FINE, "[%d] %s", 1, rgdbs[i]);
+
+            int o = 0;
+            long baseOffset = sbc.position();
+            // 0x20 sizeof CREG ??? */
+Debug.printf(Level.FINE, "[%d] size: %08x", i, rgdbs[i].size - rgdbs[i].unusedSize);
+            while (o < rgdbs[i].size - rgdbs[i].unusedSize) {
+//Debug.printf("[%d][%d] offset: %08x, %08x", i, rgdbs[i].rrs.size(), o, sbc.position() - baseOffset);
+                RGDBRecord rr = new RGDBRecord();
+                Serdes.Util.deserialize(sbc, rr);
+                if (rr.idNumber == 0xffff && rr.rgbd == 0xffff) {
+Debug.printf(Level.FINE, "[%d] maybe end: offset: %08x, rr.size: %d", i, o, rgdbs[i].rrs.size());
+                    break;
+                }
+//Debug.printf("[%d][%d]: %s", i, rgdbs[i].rrs.size(), rr);
+                rgdbs[i].rrs.put(rr.idNumber, rr);
+
+
+                rr.vrs = new ValueRecord[rr.numberOfValues];
+                for (int j = 0; j < rr.numberOfValues; j++) {
+                    rr.vrs[j] = new ValueRecord();
+                    Serdes.Util.deserialize(sbc, rr.vrs[j]);
+//Debug.printf("[%d][%d][%d]: %s", i, rgdbs[i].rrs.size(), j, rr.vrs[j]);
+                }
+
+
+                o += rr.length;
+                sbc.position(baseOffset + o); // TODO
+            }
+
+            sbc.position(creg.offsetOf1stRGDB + rgdbs[i].size);
+Debug.printf(Level.FINE, "[%d] pos: %08x", i + 1, sbc.position());
         }
 
-//	listTreeRecode(new TreeRecode(0x20 + rgkn.offsetOfRootRecode));
+//listTreeRecord(getRoot());
     }
 
-//private boolean f = false;
-
-    //-------------------------------------------------------------------------
-
     /** Test */
-    private void listTreeRecode(TreeRecode tr) {
+    private void listTreeRecord(TreeRecord tr) {
         while (true) {
             if (tr.offsetOf1stSubkey != -1) {
-                listTreeRecode(new TreeRecode(0x20 + tr.offsetOf1stSubkey));
+                listTreeRecord(new TreeRecord());
             }
             if (tr.offsetOfNext != -1) {
-                tr = new TreeRecode(0x20 + tr.offsetOfNext);
+                tr = new TreeRecord();
             } else {
                 break;
             }
         }
     }
 
-    //-------------------------------------------------------------------------
-
-    /** レジストリのルートを取得します． */
-    protected TreeRecode getRoot(Class<?> inner) {
-        return newInstance(inner, 0x20 + rgkn.offsetOfRootRecode);
+    /** Gets the root of the registry. */
+    public TreeRecord getRoot() {
+        return newInstance(0x20 + rgkn.offsetOfRootRecord);
     }
 
-    /** 新しい TreeRecode のインスタンスを返します． */
-    private TreeRecode newInstance(Class<?> inner, int offset) {
+    /** Returns new TreeRecord instance. */
+    private TreeRecord newInstance(int offset) {
         try {
-/*
-Debug.println(inner.getName());
-Constructor[] cs = inner.getConstructors();
-//Debug.println(cs.length);
-for(int i = 0; i < cs.length; i++) {
-Debug.println("-- " + i + " --");
-Class[] ps = cs[i].getParameterTypes();
-for(int j = 0; j < ps.length; j++) {
-Debug.println(ps[j].getName());
-}}*/
-            Constructor<?> c = inner.getConstructor(this.getClass(), Integer.TYPE);
-            Object treeRecode = c.newInstance(this, new Integer(offset));
+            TreeRecord treeRecord = new TreeRecord();
 
-            return (TreeRecode) treeRecode;
-        } catch (Exception e) {
-Debug.printStackTrace(e);
-            throw (RuntimeException) new IllegalStateException().initCause(e);
-        }
-    }
+            sbc.position(offset);
+            Serdes.Util.deserialize(sbc, treeRecord);
 
-    //-------------------------------------------------------------------------
-
-    /**
-     * TreeRecode のユーザインターフェースです．
-     */
-    protected class TreeRecodeImpl extends TreeRecode {
-        
-        /** TreeRecode の ValueRecode がある RGDBRecode */
-        private RGDBRecode rgdbRecode;
-        
-        /**  TreeRecode の ValueRecode */
-        private ValueRecode[] valueRecodes;
-        
-        /** TreeRecodeImpl を構築します． */
-        public TreeRecodeImpl(int offset) {
-            super(offset);
-
-//Debug.println("rgdbs: " + rgdbs.length + ", n: " + numberOfRGDB);
-            if (numberOfRGDB == -1) {
-Debug.println("no rgdb data, maybe root");
-                return;
-            }
-            
-            RGDB rgdb = rgdbs[numberOfRGDB];
-            
-            int index = getIdNumber();
-//Debug.println("index: " + "0x" + StringUtil.toHex8(index));
-
-            Iterator<RGDBRecode> e = rgdb.rrs.iterator();
-            while (e.hasNext()) {
-                RGDBRecode rr = e.next();
-                if (rr.idNumber == index) {
-//Debug.println("id: " + numberOfRGDB + "-" + numberInRGDB);
-                    rgdbRecode = rr;
+            if (treeRecord.idNumber == 0xffff && treeRecord.rgdb == 0xffff) {
+Debug.println(Level.FINE, "no rgdb data, maybe root");
+            } else {
+                RGDBRecord rgdbRecord = rgdbs[treeRecord.rgdb].rrs.get(treeRecord.idNumber);
+                if (rgdbRecord == null) {
+Debug.printf(Level.WARNING, "rgdb Record not found %d:%d", treeRecord.rgdb, treeRecord.idNumber);
+                } else {
+                    treeRecord.setRGDBRecord(rgdbRecord);
                 }
             }
-            
-            if (rgdbRecode == null) {
-Debug.println("rgdb recode not found: " + StringUtil.toHex8(index));
-return;
-            }
-            valueRecodes = rgdbRecode.vrs;
+Debug.printf(Level.FINE, "offset: %08x: %s", offset, treeRecord.toDebugString());
+
+            return treeRecord;
+        } catch (Exception e) {
+Debug.printStackTrace(e);
+            throw new IllegalStateException(e);
+        }
+    }
+
+    /** Returns first TreeRecord child. */
+    public TreeRecord get1stChildTreeRecord(TreeRecord treeRecord) {
+Debug.printf(Level.FINE, "pos: 0x%08x", 0x20 + treeRecord.offsetOf1stSubkey);
+        return newInstance(0x20 + treeRecord.offsetOf1stSubkey);
+    }
+
+    /** Gets next TreeRecord. */
+    public TreeRecord getNextTreeRecord(TreeRecord treeRecord) {
+Debug.printf(Level.FINE, "pos: 0x%08x", 0x20 + treeRecord.offsetOfNext);
+        return newInstance(0x20 + treeRecord.offsetOfNext);
+    }
+
+    /**
+     * CREG represents registry header information.
+     */
+    @Serdes(bigEndian = false)
+    private static final class CREG {
+
+        @Element(sequence = 1, value = "4", validation = "\"CREG\".getBytes()")
+        byte[] signature;
+        @Element(sequence = 2)
+        short minorFormatVersion;
+        @Element(sequence = 3)
+        short majorFormatVersion;
+        /** offset for the first RGDB */
+        @Element(sequence = 4)
+        private int offsetOf1stRGDB;
+        @Element(sequence = 5)
+        private int checksum;
+        /** the number of RGDB */
+        @Element(sequence = 6, value = "unsigned short")
+        private int numberOfRGDB;
+        @Element(sequence = 7, value = "unsigned short")
+        private int flags;
+        @Element(sequence = 8)
+        private short copyOfMinorFormatVersion;
+        @Element(sequence = 9)
+        private short copyOfMajorFormatVersion;
+        @Element(sequence = 10)
+        byte[] unknown1 = new byte[8];
+
+        @Override
+        public String toString() {
+            return "CREG{" +
+                    "signature=" + Arrays.toString(signature) +
+                    ", minorFormatVersion=" + minorFormatVersion +
+                    ", majorFormatVersion=" + majorFormatVersion +
+                    String.format(", offsetOf1stRGDB=0x%08x", offsetOf1stRGDB) +
+                    ", checksum=" + checksum +
+                    ", flags=" + flags +
+                    ", idNumber=" + numberOfRGDB +
+                    ", copyOfMinorFormatVersion=" + copyOfMinorFormatVersion +
+                    ", copyOfMajorFormatVersion=" + copyOfMajorFormatVersion +
+                    ", nextFree=" + Arrays.toString(unknown1) +
+                    '}';
+        }
+    }
+
+    /**
+     * RGKN represents the header of registry tree hierarchy.
+     */
+    @Serdes(bigEndian = false)
+    public static final class RGKN {
+        @Element(sequence = 1, value = "4", validation = "\"RGKN\".getBytes()")
+        byte[] signature;
+        /** size of RGKN? */
+        @Element(sequence = 2)
+        int size;
+        /** offset for the root TreeRecord */
+        @Element(sequence = 3)
+        public int offsetOfRootRecord;
+        @Element(sequence = 4)
+        int offsetOfFree;
+        @Element(sequence = 5)
+        int flags;
+        @Element(sequence = 6)
+        int checksum;
+        @Element(sequence = 7)
+        byte[] unknown1 = new byte[8];
+
+        /** size of CREG? */
+        static final int offset = 0x20;
+
+        @Override
+        public String toString() {
+            return "RGKN{" +
+                    "signature=" + Arrays.toString(signature) +
+                    String.format(", size=0x%08x", size) +
+                    String.format(", offsetOfRootRecord=0x%08x", offsetOfRootRecord) +
+                    String.format(", offsetOfFree=0x%08x", offsetOfFree) +
+                    ", flags=" + flags +
+                    ", checksum=" + checksum +
+                    ", unknown1=" + Arrays.toString(unknown1) +
+                    '}';
+        }
+    }
+
+    /**
+     * TreeRecord represents registry tree hierarchy. (rgkn_key)
+     */
+    @Serdes(bigEndian = false)
+    public static class TreeRecord {
+        /** 0x00000000 = normal key, 0x80000000 = free block */
+        @Element(sequence = 1)
+        int type;
+        /** the hashcode of RGDBRecord? */
+        @Element(sequence = 2)
+        int hash;
+        @Element(sequence = 3)
+        int nextFree;
+        /** offset for parent TreeRecord */
+        @Element(sequence = 4)
+        int offsetOfParent;
+        /** offset for the first child of TreeRecord */
+        @Element(sequence = 5)
+        int offsetOf1stSubkey;
+        /** offset for the next child of TreeRecord */
+        @Element(sequence = 6)
+        int offsetOfNext;
+        /** RGDB index that has RGDBRecord */
+        @Element(sequence = 7, value = "unsigned short")
+        int idNumber;
+        /** internal RGDB index of RGDBRecord */
+        @Element(sequence = 8, value = "unsigned short")
+        int rgdb;
+
+        /** RGDBRecord which has TreeRecord's ValueRecord */
+        private RGDBRecord rgdbRecord;
+
+        /** Creates TreeRecordImpl. */
+        void setRGDBRecord(RGDBRecord rgdbRecord) {
+            this.rgdbRecord = rgdbRecord;
         }
 
-        /** 子供の TreeRecode があるかどうかを返します． */
-        public boolean hasChildTreeRecodes() {
-//Debug.println(offsetOf1stSubkey != -1);
+        /** Returns having child TreeRecord or not. */
+        public boolean hasChildTreeRecords() {
+Debug.println(Level.FINER, offsetOf1stSubkey != -1);
             return offsetOf1stSubkey != -1;
         }
-        
-        /** 最初の子供の TreeRecode を取得します． */
-        public TreeRecode get1stChildTreeRecode() {
-            return newInstance(getClass(), 0x20 + offsetOf1stSubkey);
-        }
-        
-        /** 次の TreeRecode があるかどうかを返します． */
-        public boolean hasNextTreeRecode() {
-//Debug.println(offsetOfNext != -1);
+
+        /** Returns having next TreeRecord ot not. */
+        public boolean hasNextTreeRecord() {
+Debug.println(Level.FINER, offsetOfNext != -1);
             return offsetOfNext != -1;
         }
-        
-        /** 次の TreeRecode を取得します． */
-        public TreeRecode getNextTreeRecode() {
-            return newInstance(getClass(), 0x20 + offsetOfNext);
-        }
-        
-        /** TreeRecode のキー名を取得します． */
-        public String getKeyName() {
-            if (rgdbRecode != null) {
-                return rgdbRecode.keyName;
-            } else if (numberOfRGDB == -1) {
+
+        /** Gets the key name of the TreeRecord. */
+        @Override
+        public String toString() {
+            if (rgdbRecord != null) {
+                return rgdbRecord.keyName;
+            } else if (idNumber == 0xffff) {
                 return "HKEY_root";
             } else {
-                return "???";	// たぶんシンボリックリンクじゃないの？
+                return "???"; // maybe symbolic link?
             }
         }
-        
-        /** TreeRecode が持つキーの数を返します． */
-        protected int getKeySize() {
-            if (valueRecodes != null) {
-                return valueRecodes.length;
+
+        /** Returns the number of TreeRecord's key. */
+        public int getKeySize() {
+            if (rgdbRecord != null && rgdbRecord.vrs != null) {
+                return rgdbRecord.vrs.length;
             } else {
                 return 0;
             }
         }
-        
-        /** インデックスで指定したデータの名前を取得します． */
-        protected String getValueName(int index) {
-            return valueRecodes[index].valueName;
+
+        /** Gets the name of specified index. */
+        public String getValueName(int index) {
+            return rgdbRecord.vrs[index].valueName;
         }
-        
-        /** インデックスで指定したデータの型を取得します． */
-        protected int getValueType(int index) {
-            return valueRecodes[index].type;
+
+        /** Gets the data type of specified index. */
+        public int getValueType(int index) {
+            return rgdbRecord.vrs[index].type;
         }
-        
-        /** インデックスで指定したデータの値を取得します． */
-        protected byte[] getValueData(int index) {
-            return valueRecodes[index].valueData;
+
+        /** Gets the data value of specified index. */
+        public byte[] getValueData(int index) {
+            return rgdbRecord.vrs[index].valueData;
         }
-        
-        /** インデックスで指定したデータの値を String として取得します．*/
-        protected String getValueDataAsString(int index) {
-            try {
-                return new String(getValueData(index), encoding);
-            } catch (UnsupportedEncodingException e) {
-Debug.printStackTrace(e);
-                return new String(getValueData(index));
-            }
+
+        /** Gets the data value of specified index as String. */
+        public String getValueDataAsString(int index) {
+            return new String(getValueData(index), Charset.forName(encoding));
         }
-        
-        /** インデックスで指定したデータの値を int として取得します． */
-        protected int getValueDataAsDWord(int index) {
+
+        /** Gets the data value of specified index as Integer. */
+        public int getValueDataAsDWord(int index) {
             byte[] b = getValueData(index);
-            return getDWord(b[0], b[1], b[2], b[3]);
+            return ByteUtil.readLeInt(b, 0);
         }
-    }
 
-    //-------------------------------------------------------------------------
-
-    /**
-     * レジストリのヘッダ情報を表します．
-     */
-    private final class CREG {
-
-        /** 最初の RGDB へのオフセット */
-        private int offsetOf1stRGDB;
-        /** RGDB の数 */
-        private int numberOfRGDB;
-        
-        /** CREG を構築します． */
-        public CREG() throws IOException {
-            
-            if (!checkHeader("CREG",
-                             memory[0x00],
-                             memory[0x01],
-                             memory[0x02],
-                             memory[0x03])) {
-                throw new IllegalArgumentException("CREG");
-            }
-            
-            offsetOf1stRGDB = getDWord(memory[0x08],
-                                       memory[0x09],
-                                       memory[0x0a],
-                                       memory[0x0b]);
-//Debug.println("offsetOf1stRGDB: " + "0x" + StringUtil.toHex8(offsetOf1stRGDB));
-            
-            numberOfRGDB = getWord(memory[0x10],
-                                   memory[0x11]);
-            Debug.println("numberOfRGDB: " + numberOfRGDB);
+        public String toDebugString() {
+            return getClass().getSimpleName() + "{" +
+                    "type=" + type +
+                    String.format(", hash=0x%08x", hash) +
+                    String.format(", nextFree=0x%08x", nextFree) +
+                    String.format(", offsetOfParent=0x%08x", offsetOfParent) +
+                    String.format(", offsetOf1stSubkey=0x%08x", offsetOf1stSubkey) +
+                    String.format(", offsetOfNext=0x%08x", offsetOfNext) +
+                    ", idNumber=" + idNumber +
+                    ", rgdb=" + rgdb +
+                    '}';
         }
     }
 
     /**
-     * レジストリのツリー情報のヘッダを表します．
+     * RGDB represents registry block. Including multiple RGDBRecord.
      */
-    private final class RGKN {
+    @Serdes(bigEndian = false)
+    private static final class RGDB {
 
-        /** RGKN のサイズ？ */
+        @Element(sequence = 1, value = "4", validation = "\"RGDB\".getBytes()")
+        byte[] signature;
+        /** size of RGDB */
+        @Element(sequence = 2)
         int size;
-        /** ルートの TreeRecode へのオフセット */
-        int offsetOfRootRecode;
-        
-        /** CREG のサイズ？ */
-        static final int offset = 0x20;
-        
-        /** RGKN を構築します． */
-        RGKN() {
-            
-            if (!checkHeader("RGKN",
-                             memory[offset+0x00],
-                             memory[offset+0x01],
-                             memory[offset+0x02],
-                             memory[offset+0x03])) {
-                throw new IllegalArgumentException("RGKN");
-            }
-            
-            size = getDWord(memory[offset+0x04],
-                            memory[offset+0x05],
-                            memory[offset+0x06],
-                            memory[offset+0x07]);
-//Debug.println("size: " + "0x" + StringUtil.toHex8(size));
+        @Element(sequence = 3)
+        int unusedSize;
+        @Element(sequence = 4, value = "unsigned short")
+        int flags;
+        @Element(sequence = 5, value = "unsigned short")
+        int section;
+        /** -1 if there is no free space */
+        @Element(sequence = 6)
+        int freeOffset;
+        @Element(sequence = 7, value = "unsigned short")
+        int maxId;
+        @Element(sequence = 8, value = "unsigned short")
+        int firstFreeId;
+        @Element(sequence = 9)
+        int unknown1;
+        @Element(sequence = 10)
+        int checksum;
 
-            offsetOfRootRecode = getDWord(memory[offset+0x08],
-                                          memory[offset+0x09],
-                                          memory[offset+0x0a],
-                                          memory[offset+0x0b]);
-//Debug.println("offsetOfRootRecode: "+"0x"+StringUtil.toHex8(offsetOfRootRecode));
+        /** list of RGDBRecord */
+        Map<Integer, RGDBRecord> rrs = new HashMap<>();
+
+        @Override
+        public String toString() {
+            return "RGDB{" +
+                    "signature=" + Arrays.toString(signature) +
+                    String.format(", size=%1$d (%1$08x)", size) +
+                    ", unusedSize=" + unusedSize +
+                    ", flags=" + flags +
+                    ", section=" + section +
+                    ", freeOffset=" + freeOffset +
+                    ", maxId=" + maxId +
+                    ", firstFreeId=" + firstFreeId +
+                    ", flags=" + unknown1 +
+                    ", checksum=" + checksum +
+                    ", rrs=" + rrs +
+                    '}';
         }
     }
 
     /**
-     * レジストリのツリー構造を表すクラスです．
+     * RGDBRecord represents key. Including multiple ValueRecord.
      */
-    private class TreeRecode {
+    @Serdes(bigEndian = false)
+    private static final class RGDBRecord {
 
-        /** RGDBRecode のハッシュ値？ */
-        int hash;
-        /** 親の TreeRecode へのオフセット */
-        int offsetOfParent;
-        /** 最初の子供の TreeRecode へのオフセット */
-        int offsetOf1stSubkey;
-        /** 次の TreeRecode へのオフセット */
-        int offsetOfNext;
-        /** RGDBRecode がある RGDB のインデックス */
-        int numberOfRGDB;
-        /** RGDB 内での RGDBRecode のインデックス */
-        int numberInRGDB;
-        
-        /** TreeRecode を構築します． */
-        TreeRecode(int offset) {
-            
-            int dummy;
-            
-            dummy = getDWord(memory[offset+0x00],
-                             memory[offset+0x01],
-                             memory[offset+0x02],
-                             memory[offset+0x03]);
-//Debug.println("always 0: " + dummy);
-
-            hash = getDWord(memory[offset+0x04],
-                            memory[offset+0x05],
-                            memory[offset+0x06],
-                            memory[offset+0x07]);
-//Debug.println("hash: " + "0x" + StringUtil.toHex8(hash));
-
-            dummy = getDWord(memory[offset+0x08],
-                             memory[offset+0x09],
-                             memory[offset+0x0a],
-                             memory[offset+0x0b]);
-//Debug.println("always -1: " + dummy);
-
-            offsetOfParent = getDWord(memory[offset+0x0c],
-                                      memory[offset+0x0d],
-                                      memory[offset+0x0e],
-                                      memory[offset+0x0f]);
-//Debug.println("offsetOfParent: " + "0x" + StringUtil.toHex8(offsetOfParent));
-
-            offsetOf1stSubkey = getDWord(memory[offset+0x10],
-                                         memory[offset+0x11],
-                                         memory[offset+0x12],
-                                         memory[offset+0x13]);
-//Debug.println("offsetOf1stSubkey: "+"0x"+StringUtil.toHex8(offsetOf1stSubkey));
-
-            offsetOfNext = getDWord(memory[offset+0x14],
-                                    memory[offset+0x15],
-                                    memory[offset+0x16],
-                                    memory[offset+0x17]);
-//Debug.println("offsetOfNext: " + "0x" + StringUtil.toHex8(offsetOfNext));
-
-/*
-	        int idNumber = getDWord(memory[offset+0x18],
-                        	        memory[offset+0x19],
-                        	        memory[offset+0x1a],
-                        	        memory[offset+0x1b]);
-Debug.println("idNumber: " + "0x" + StringUtil.toHex8(idNumber));
-    	    numberOfRGDB = (idNumber >> 16) & 0xffff;
-    	    numberInRGDB = idNumber & 0x0000ffff;
-//Debug.println("numberOfRGDB: " + numberOfRGDB);
-//Debug.println("numberInRGDB: " + "0x" + StringUtil.toHex8(numberInRGDB));
-*/
-            numberInRGDB = getWord(memory[offset+0x18],
-                                   memory[offset+0x19]);
-//Debug.println("numberInRGDB: " + numberInRGDB);
-            numberOfRGDB = getWord(memory[offset+0x1a],
-                                   memory[offset+0x1b]);
-//Debug.println("numberOfRGDB: " + numberOfRGDB);
-        }
-        
-        /** ID を返します． */
-        int getIdNumber() { return (numberOfRGDB << 16) | numberInRGDB; }
-    }
-
-    /**
-     * レジストリのブロックです．複数の RGDBRecode を内包します．
-     */
-    private final class RGDB {
-
-        /** RGDB のサイズ */
-        int size;
-        /** RGDBRecode のベクタ */
-        List<RGDBRecode> rrs = new ArrayList<RGDBRecode>();
-        
-        /** RGDB を構築します． */
-        RGDB(int offset)	{
-            
-            if (!checkHeader("RGDB",
-                             memory[offset+0x00],
-                             memory[offset+0x01],
-                             memory[offset+0x02],
-                             memory[offset+0x03])) {
-                throw new IllegalArgumentException("RGDB");
-            }
-            
-            size = getDWord(memory[offset+0x04],
-                            memory[offset+0x05],
-                            memory[offset+0x06],
-                            memory[offset+0x07]);
-//Debug.println("size: " + "0x" + StringUtil.toHex8(size));
-            
-            int o = 0;
-            // 0x20 sizeof CREG ??? */
-            while (offset + 0x20 + o < memory.length) {
-//if(f)Debug.println("offset: " + (offset + 0x20 + o));
-                RGDBRecode rr = new RGDBRecode(offset + 0x20 + o);
-                rrs.add(rr);
-                if (rr.idNumber == -1) {
-                    break;
-                }
-                o += rr.length;
-//try{while(System.in.available()>0)System.in.read();System.in.read();}
-//catch(IOException e){}
-            }
-        }
-    }
-
-    /**
-     * キーを表します．複数の ValueRecode を内包します．
-     */
-    private final class RGDBRecode {
-        
-        /** RGDBRecode のサイズ */
+        /** size of RGDBRecord */
+        @Element(sequence = 1)
         int length;
-        /** TreeRecode で参照される ID */
+        /** ID referred by TreeRecord */
+        @Element(sequence = 2, value = "unsigned short")
         int idNumber;
-        /** RGDBRecode の？ */
+        @Element(sequence = 3, value = "unsigned short")
+        int rgbd;
+        /** size of RGDBRecord? */
+        @Element(sequence = 4)
         int size;
-        /** キーの名前の長さ */
+        /** the length of the key name */
+        @Element(sequence = 5, value = "unsigned short")
         int textLength;
-        /** レジストリの値の数 */
+        /** number of the registry values */
+        @Element(sequence = 6, value = "unsigned short")
         int numberOfValues;
-        /** キーの名前 */
+        @Element(sequence = 7)
+        int unknown1;
+        /** the name of the key */
+        @Element(sequence = 8, value = "$5")
         String keyName;
-        /** レジストリの値 */
-        ValueRecode[] vrs;
-        
-        /** RGDBRecode を構築します． */
-        RGDBRecode(int offset) {
-            
-            int dummy;
-            
-            length = getDWord(memory[offset+0x00],
-                              memory[offset+0x01],
-                              memory[offset+0x02],
-                              memory[offset+0x03]);
-//Debug.println("length: " + "0x" + StringUtil.toHex8(length));
-            
-            idNumber = getDWord(memory[offset+0x04],
-                                memory[offset+0x05],
-                                memory[offset+0x06],
-                                memory[offset+0x07]);
-//Debug.println("idNumber: " + "0x" + StringUtil.toHex8(idNumber));
 
-            size = getDWord(memory[offset+0x08],
-                            memory[offset+0x09],
-                            memory[offset+0x0a],
-                            memory[offset+0x0b]);
-//Debug.println("size: " + "0x" + StringUtil.toHex8(size));
+        /** value of the registry */
+        ValueRecord[] vrs;
 
-/*if (idNumber == -1 && size == -1) {
-Debug.println("maybe end: length: " + length);
-} else */if (idNumber == -1 && size != -1) {
-Debug.println("maybe end: size: "+StringUtil.toHex8(size)+": length: "+length);
-}
-
-            textLength = getWord(memory[offset+0x0c],
-                                 memory[offset+0x0d]);
-//Debug.println("textLength: " + textLength);
-
-            numberOfValues = getWord(memory[offset+0x0e],
-                                     memory[offset+0x0f]);
-//Debug.println("numberOfValues: " + "0x" + StringUtil.toHex4(numberOfValues));
-
-            dummy = getDWord(memory[offset+0x10],
-                             memory[offset+0x11],
-                             memory[offset+0x12],
-                             memory[offset+0x13]);
-//Debug.println("always 0: " + dummy);
-if(dummy != 0) {
-Debug.println("may be end: dummy: " + StringUtil.toHex8(dummy) + ": length: " + StringUtil.toHex8(length));
-Debug.println("may be end: index: " + StringUtil.toHex8(idNumber));
-idNumber = -1;
-return;}
-
-            try {
-                keyName = new String(memory, offset + 0x14, textLength, encoding);
-            } catch (UnsupportedEncodingException e) {
-Debug.println(e);
-                idNumber = -1;
-                return;
-            }
-//if(idNumber == -1 && size != -1)Debug.println("keyName: " + keyName);
-
-            vrs = new ValueRecode[numberOfValues];
-            // 0x14 sizeof RGDBRecode (base)
-            int o = offset + 0x14 + textLength;
-            for (int i = 0; i < numberOfValues; i++) {
-                vrs[i] = new ValueRecode(o);
-//if(idNumber == -1 && size != -1)Debug.println("vr: " + i);
-		// 0x0c sizeof VlueRecode (base)
-                o += 0x0c + vrs[i].lengthOfValueName + vrs[i].lengthOfValueData;
-            }
+        @Override
+        public String toString() {
+            return "RGDBRecord{" +
+                    "length=" + length +
+                    ", idNumber=" + idNumber +
+                    ", rgbd=" + rgbd +
+                    ", size=" + size +
+                    ", textLength=" + textLength +
+                    ", numberOfValues=" + numberOfValues +
+                    ", unknown1=" + unknown1 +
+                    ", keyName=" + keyName +
+                    '}';
         }
 
-        /** TreeRecode で参照されるハッシュ値を取得します． */
+        /** Gets a hashcode referred by a TreeRecord. */
         int getHash() {
-            
+
             int hash = 0;
-            byte[] name = null;
-            
-            try {
-                name = keyName.getBytes(encoding);
-            } catch (UnsupportedEncodingException e) {
-Debug.println(e);
-            }
-            
+            byte[] name = keyName.getBytes(Charset.forName(encoding));
+
             for (int i = 0; i < textLength; i++) {
-                if (name[i] < 0x80) {
+                if ((name[i] & 0xff) < 0x80) {
                     hash += name[i];
                 }
             }
-            
+
             return hash;
         }
     }
 
     /**
-     * レジストリの１つのデータを表すクラスです．
+     * ValueRecord represents one data of the registry.
      */
-    private final class ValueRecode {
+    @Serdes(bigEndian = false)
+    public static final class ValueRecord {
 
-        /** データの型 */
+        /** data type */
+        @Element(sequence = 1)
         int type;
-        /** データの名前の長さ */
+        @Element(sequence = 2)
+        int dummy;
+        /** data name length */
+        @Element(sequence = 3, value = "unsigned short")
         int lengthOfValueName;
-        /** データの長さ */
+        /** data length */
+        @Element(sequence = 4, value = "unsigned short")
         int lengthOfValueData;
-        /** データの名前 */
+        /** data name */
+        @Element(sequence = 5, value = "$3")
         String valueName;
-        /** データ */
+        /** data */
+        @Element(sequence = 6, value = "$4")
         byte[] valueData;
-        
-        /** ValueRecode を構築します． */
-        ValueRecode(int offset) {
-            int dummy;
 
-            type = getDWord(memory[offset+0x00],
-                            memory[offset+0x01],
-                            memory[offset+0x02],
-                            memory[offset+0x03]);
-//Debug.println("type: " + getTypeName(type) + "(" + StringUtil.toHex8(type) + ")");
+        @Override
+        public String toString() {
+            return "ValueRecord{" +
+                    String.format("type=%1$d(%1$08x)", type) +
+                    ", dummy=" + dummy +
+                    ", lengthOfValueName=" + lengthOfValueName +
+                    ", lengthOfValueData=" + lengthOfValueData +
+                    ", valueName='" + valueName + '\'' +
+                    ", valueData=" + Arrays.toString(valueData) +
+                    '}';
+        }
 
-            dummy = getDWord(memory[offset+0x04],
-                             memory[offset+0x05],
-                             memory[offset+0x06],
-                             memory[offset+0x07]);
-//Debug.println("always 0: " + dummy);
-
-            lengthOfValueName = getWord(memory[offset+0x08],
-                                        memory[offset+0x09]);
-//Debug.println("lengthOfValueName: " + lengthOfValueName);
-
-            lengthOfValueData = getWord(memory[offset+0x0a],
-                                        memory[offset+0x0b]);
-//Debug.println("lengthOfValueData: " + lengthOfValueData);
-
-            try {
-                valueName = new String(memory, offset + 0x0c, lengthOfValueName, encoding);
-            } catch (UnsupportedEncodingException e) {
-Debug.println(e);
-                return;
-            }
-//Debug.println("valueName: " + valueName);
-
+        /** Creates a ValueRecord. */
+        void x() {
             switch (type) {
             case RegSZ: // 0x00000001
-                valueData = new byte[lengthOfValueData];
-                for (int j = 0; j < lengthOfValueData; j++) {
-                    valueData[j] = memory[offset + 0x0c + lengthOfValueName + j];
-                }
-//try {
-//Debug.println("valueData: " + new String(valueData, encoding));
-//} catch(Throwable e) {e.printStackTrace();}
+//Debug.println("valueData: " + new String(valueData, Charset.forName(encoding)));
                 break;
             case RegBin: // 0x00000003
-                valueData = new byte[lengthOfValueData];
-                for (int j = 0; j < lengthOfValueData; j++)
-                    valueData[j] = memory[offset + 0x0c + lengthOfValueName + j];
 //Debug.print("valueData:");
 //for(int i = 0; i < lengthOfValueData; i++) {
-//System.err.print(" " + StringUtil.toHex2(valueData[i]));
+//System.err.printf(" %02x", valueData[i]);
 //}Debug.out.println();
                 break;
-            case RegDWord:		// 0x00000004
-                valueData = new byte[4];
-                for (int j = 0; j < 4; j++)
-                    valueData[j] = memory[offset+0x0c+lengthOfValueName+j];
-                break;
+            case RegDWord: // 0x00000004
             case 0x00000000:
             case 0x00000002:
             case 0x00000007:
             default:
-Debug.println("data: unknown(" + type + ")");
-            break;
+                Debug.println(Level.WARNING, "data: unknown(" + type + ")");
+                break;
             }
         }
 
-        /** データの方を文字列として返します． */
+        /** Returns data type as String. */
         String getTypeName(int type) {
-            
+
             switch (type) {
-            case RegSZ:			// 0x00000001
+            case RegSZ: // 0x00000001
                 return "RegSZ";
-            case RegBin:		// 0x00000003
+            case RegBin: // 0x00000003
                 return "RegBin";
-            case RegDWord:		// 0x00000004
+            case RegDWord: // 0x00000004
                 return "RegDWord";
             case 0x00000000:
             case 0x00000007:
@@ -677,45 +581,13 @@ Debug.println("data: unknown(" + type + ")");
         }
     }
 
-    //-------------------------------------------------------------------------
-
-    /** リトルエンディアンで 4 Byte 長の int としてデータを読みます． */
-    private static final int getDWord(byte ll, byte lh, byte hl, byte hh) {
-        return (getWord(hl, hh) & 0xffff) << 16 |
-               (getWord(ll, lh) & 0xffff);
-    }
-
-    /** リトルエンディアンで 2 Byte 長の short としてデータを読みます． */
-    private static final short getWord(byte l, byte h) {
-            return (short) ((h & 0xff) << 8 | (l & 0xff));
-    }
-
-    /**
-     * ヘッダ文字を確認します．
-     */
-    private static final boolean checkHeader(String header,
-				       byte b1, byte b2, byte b3, byte b4) {
-
-        StringBuilder sb = new StringBuilder();
-        
-        sb.append((char) b1);
-        sb.append((char) b2);
-        sb.append((char) b3);
-        sb.append((char) b4);
-        
-//Debug.println(sb.toString());
-        return sb.toString().equals(header);
-    }
-
-    //-------------------------------------------------------------------------
-
     /**
      * Tests this clas.
+     *
      * @param args registry file
      */
     public static void main(String[] args) throws Exception {
-        InputStream is = new BufferedInputStream(new FileInputStream(args[0]));
-        Registry reg = new Registry(is);
+        Registry reg = new Registry(Files.newByteChannel(Paths.get(args[0])));
     }
 }
 
