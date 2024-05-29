@@ -23,13 +23,11 @@ public class ValueRecordTableCellRenderer extends DefaultTableCellRenderer {
      * @param value should be {@link JLabel}
      */
     public void setValue(Object value) {
-        /* Set the text. */
+        // Set the text
         setText(((JLabel) value).getText());
-        /* Tooltips used by the table. */
+        // Tooltips used by the table
         setToolTipText(((JLabel) value).getText());
 
         setIcon(((JLabel) value).getIcon());
     }
 }
-
-/* */

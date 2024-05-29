@@ -121,5 +121,3 @@ Debug.println("col: " + col);
         table.put("registryViewer.unknownIcon", LookAndFeel.makeIcon(clazz, "/unknown.gif"));
     }
 }
-
-/* */

@@ -43,7 +43,7 @@ public class ValueRecordTreeNode extends DefaultMutableTreeNode {
     private boolean hasLoaded;
 
     /** */
-    private Registry registry;
+    private final Registry registry;
 
     /**
      * Constructs a new RegistryViewerTreeNode instance with o as the user object.
@@ -71,7 +71,7 @@ public class ValueRecordTreeNode extends DefaultMutableTreeNode {
 
     /** Returns data contains str. */
     public boolean contains(String str) {
-        if (((Registry.TreeRecord) userObject).toString().toLowerCase().contains(str.toLowerCase()))
+        if (userObject.toString().toLowerCase().contains(str.toLowerCase()))
             return true;
 // Debug.println(userObject.getClass().getName());
 
@@ -140,5 +140,3 @@ public class ValueRecordTreeNode extends DefaultMutableTreeNode {
         hasLoaded = true;
     }
 }
-
-/* */

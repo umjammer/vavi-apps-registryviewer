@@ -7,15 +7,12 @@
 package vavi.util.win32.registry;
 
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 
@@ -46,11 +43,11 @@ public class Registry {
     public static final int RegDWord = 0x00000004;
 
     /** CREG */
-    private CREG creg;
+    private final CREG creg;
     /** RGKN */
-    private RGKN rgkn;
+    private final RGKN rgkn;
     /** RGDBs */
-    private RGDB[] rgdbs;
+    private final RGDB[] rgdbs;
 
     /** The encoding */
     private static final String encoding = "JISAutoDetect";
@@ -141,7 +138,7 @@ Debug.printf(Level.FINE, "[%d] pos: %08x", i + 1, sbc.position());
     }
 
     /** Test */
-    private void listTreeRecord(TreeRecord tr) {
+    private static void listTreeRecord(TreeRecord tr) {
         while (true) {
             if (tr.offsetOf1stSubkey != -1) {
                 listTreeRecord(new TreeRecord());
@@ -590,5 +587,3 @@ Debug.println(Level.FINER, offsetOfNext != -1);
         Registry reg = new Registry(Files.newByteChannel(Paths.get(args[0])));
     }
 }
-
-/* */
