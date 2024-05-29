@@ -7,9 +7,23 @@
 
 🐣 Incubation for tree and application bindings.
 
+## Install
+
+ * [maven](https://jitpack.io/#umjammer/vavi-apps-registryviewer)
+
+## Usage
+
+```shell
+ $ mvn -P run antrun:run -Dregistry='foo/bar/user.dat'
+```
+
 ## References
 
-* https://github.com/libyal/libcreg/blob/main/documentation/Windows%209x%20Registry%20File%20(CREG)%20format.asciidoc
-* nt
-  * [vavi-nio-file-discutil](https://github.com/umjammer/vavi-nio-file-discutils) 
-  * https://github.com/sarxos/win-registry
+ * https://github.com/libyal/libcreg/blob/main/documentation/Windows%209x%20Registry%20File%20(CREG)%20format.asciidoc
+ * for nt
+   * [vavi-nio-file-discutil](https://github.com/umjammer/vavi-nio-file-discutils) 
+   * https://github.com/sarxos/win-registry
+
+## TODO
+
+ * apply [vav-apps-treeview](https://github.com/umjammer/vavi-apps-treeview)

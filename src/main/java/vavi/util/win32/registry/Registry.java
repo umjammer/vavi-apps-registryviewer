@@ -563,18 +563,12 @@ Debug.println(Level.FINER, offsetOfNext != -1);
         /** Returns data type as String. */
         String getTypeName(int type) {
 
-            switch (type) {
-            case RegSZ: // 0x00000001
-                return "RegSZ";
-            case RegBin: // 0x00000003
-                return "RegBin";
-            case RegDWord: // 0x00000004
-                return "RegDWord";
-            case 0x00000000:
-            case 0x00000007:
-            default:
-                return "Unknown";
-            }
+            return switch (type) {
+                case RegSZ -> "RegSZ";       // 0x00000001
+                case RegBin -> "RegBin";     // 0x00000003
+                case RegDWord -> "RegDWord"; // 0x00000004
+                default -> "Unknown";
+            };
         }
     }
 

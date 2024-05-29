@@ -17,22 +17,55 @@
   <url>http://www.vavisoft.com/</url>
   <description/>
 
+  <profiles>
+    <profile>
+      <!-- mvn -P run antrun:run -Dregistry='src/test/resources/user.dat' -->
+      <id>run</id>
+      <build>
+        <plugins>
+          <plugin>
+            <!-- GOOD: fork: OK, test jars: OK, user args, default args: OK -->
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <version>3.1.0</version>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+                <java classname="vavi.apps.registryViewer.RegistryViewer" fork="true">
+                  <classpath>
+                    <path refid="maven.compile.classpath"/>
+                    <path refid="maven.test.classpath"/>
+                  </classpath>
+                  <jvmarg value="-Djava.util.logging.config.file=${project.build.testOutputDirectory}/logging.properties" />
+                  <jvmarg value="-Dswing.defaultlaf=com.formdev.flatlaf.FlatLightLaf" />
+                  <jvmarg value="-Dapple.laf.useScreenMenuBar=true" />
+                  <jvmarg value="-Dapple.awt.application.name=RegistryViewer" />
+                  <arg value="${registry}" />
+                </java>
+              </target>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
   <build>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.10.1</version>
+        <version>3.11.0</version>
         <configuration>
-          <source>8</source>
-          <target>8</target>
-          <encoding>UTF-8</encoding>
+          <release>17</release>
         </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.0.0-M7</version>
+        <version>3.2.2</version>
         <configuration>
           <argLine>
             -Djava.util.logging.config.file=${project.build.testOutputDirectory}/logging.properties
@@ -48,6 +81,11 @@
       <id>jitpack.io</id>
       <url>https://jitpack.io</url>
     </repository>
+    <repository>
+      <id>maven_central</id>
+      <name>Maven Central</name>
+      <url>https://repo.maven.apache.org/maven2/</url>
+    </repository>
   </repositories>
 
   <dependencyManagement>
@@ -55,7 +93,7 @@
       <dependency>
         <groupId>org.junit</groupId>
         <artifactId>junit-bom</artifactId>
-        <version>5.9.1</version>
+        <version>5.10.2</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -66,23 +104,23 @@
     <dependency>
       <groupId>com.github.umjammer</groupId>
       <artifactId>vavi-commons</artifactId>
-      <version>1.1.8</version>
+      <version>1.1.13</version>
     </dependency>
     <dependency>
       <groupId>com.github.umjammer</groupId>
       <artifactId>vavi-util-serdes</artifactId>
-      <version>1.0.3</version>
+      <version>1.0.6</version>
     </dependency>
     <dependency>
       <groupId>com.github.umjammer</groupId>
       <artifactId>vavi-awt</artifactId>
-      <version>1.0.6</version>
+      <version>1.0.7</version>
     </dependency>
 
     <dependency>
       <groupId>com.formdev</groupId>
       <artifactId>flatlaf</artifactId>
-      <version>2.6</version>
+      <version>3.4.1</version>
       <scope>runtime</scope>
     </dependency>
 
