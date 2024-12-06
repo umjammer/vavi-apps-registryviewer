@@ -7,6 +7,8 @@
 package vavi.util.win32.registry;
 
 import java.io.IOException;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -14,12 +16,13 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
 
 import vavi.util.ByteUtil;
 import vavi.util.Debug;
 import vavi.util.serdes.Element;
 import vavi.util.serdes.Serdes;
+
+import static java.lang.System.getLogger;
 
 
 /**
@@ -34,6 +37,8 @@ import vavi.util.serdes.Serdes;
  * @see "https://github.com/yuval1024/Samba/blob/ed3ab6ec48e635ab4aaef445e67454b023d02efb/Samba/source/lib/registry/reg_backend_w95.c"
  */
 public class Registry {
+
+    private static final Logger logger = getLogger(Registry.class.getName());
 
     /** data type for string */
     public static final int RegSZ = 0x00000001;
@@ -87,34 +92,34 @@ public class Registry {
 
         creg = new CREG();
         Serdes.Util.deserialize(sbc, creg);
-Debug.println(Level.FINE, creg);
+logger.log(Level.DEBUG, creg);
         rgkn = new RGKN();
         Serdes.Util.deserialize(sbc, rgkn);
-Debug.println(Level.FINE, rgkn);
+logger.log(Level.DEBUG, rgkn);
 
         sbc.position(creg.offsetOf1stRGDB);
-Debug.printf(Level.FINE, "[0] pos: %08x", sbc.position());
+logger.log(Level.DEBUG, "[0] pos: %08x".formatted(sbc.position()));
         rgdbs = new RGDB[creg.numberOfRGDB];
 
         for (int i = 0; i < creg.numberOfRGDB; i++) {
 
             rgdbs[i] = new RGDB();
             Serdes.Util.deserialize(sbc, rgdbs[i]);
-Debug.printf(Level.FINE, "[%d] %s", 1, rgdbs[i]);
+logger.log(Level.DEBUG, "[%d] %s".formatted(1, rgdbs[i]));
 
             int o = 0;
             long baseOffset = sbc.position();
             // 0x20 sizeof CREG ??? */
-Debug.printf(Level.FINE, "[%d] size: %08x", i, rgdbs[i].size - rgdbs[i].unusedSize);
+logger.log(Level.DEBUG, "[%d] size: %08x".formatted(i, rgdbs[i].size - rgdbs[i].unusedSize));
             while (o < rgdbs[i].size - rgdbs[i].unusedSize) {
-//Debug.printf("[%d][%d] offset: %08x, %08x", i, rgdbs[i].rrs.size(), o, sbc.position() - baseOffset);
+//logger.log("[%d][%d] offset: %08x, %08x".formatted(i, rgdbs[i].rrs.size(), o, sbc.position() - baseOffset));
                 RGDBRecord rr = new RGDBRecord();
                 Serdes.Util.deserialize(sbc, rr);
                 if (rr.idNumber == 0xffff && rr.rgbd == 0xffff) {
-Debug.printf(Level.FINE, "[%d] maybe end: offset: %08x, rr.size: %d", i, o, rgdbs[i].rrs.size());
+logger.log(Level.DEBUG, "[%d] maybe end: offset: %08x, rr.size: %d".formatted(i, o, rgdbs[i].rrs.size()));
                     break;
                 }
-//Debug.printf("[%d][%d]: %s", i, rgdbs[i].rrs.size(), rr);
+//logger.log(Level.DEBUG, "[%d][%d]: %s".formatted(i, rgdbs[i].rrs.size(), rr));
                 rgdbs[i].rrs.put(rr.idNumber, rr);
 
 
@@ -122,7 +127,7 @@ Debug.printf(Level.FINE, "[%d] maybe end: offset: %08x, rr.size: %d", i, o, rgdb
                 for (int j = 0; j < rr.numberOfValues; j++) {
                     rr.vrs[j] = new ValueRecord();
                     Serdes.Util.deserialize(sbc, rr.vrs[j]);
-//Debug.printf("[%d][%d][%d]: %s", i, rgdbs[i].rrs.size(), j, rr.vrs[j]);
+//logger.log("[%d][%d][%d]: %s".formatted(i, rgdbs[i].rrs.size(), j, rr.vrs[j]));
                 }
 
 
@@ -131,7 +136,7 @@ Debug.printf(Level.FINE, "[%d] maybe end: offset: %08x, rr.size: %d", i, o, rgdb
             }
 
             sbc.position(creg.offsetOf1stRGDB + rgdbs[i].size);
-Debug.printf(Level.FINE, "[%d] pos: %08x", i + 1, sbc.position());
+logger.log(Level.DEBUG, "[%d] pos: %08x".formatted(i + 1, sbc.position()));
         }
 
 //listTreeRecord(getRoot());
@@ -165,16 +170,16 @@ Debug.printf(Level.FINE, "[%d] pos: %08x", i + 1, sbc.position());
             Serdes.Util.deserialize(sbc, treeRecord);
 
             if (treeRecord.idNumber == 0xffff && treeRecord.rgdb == 0xffff) {
-Debug.println(Level.FINE, "no rgdb data, maybe root");
+logger.log(Level.DEBUG, "no rgdb data, maybe root");
             } else {
                 RGDBRecord rgdbRecord = rgdbs[treeRecord.rgdb].rrs.get(treeRecord.idNumber);
                 if (rgdbRecord == null) {
-Debug.printf(Level.WARNING, "rgdb Record not found %d:%d", treeRecord.rgdb, treeRecord.idNumber);
+logger.log(Level.WARNING, "rgdb Record not found %d:%d".formatted(treeRecord.rgdb, treeRecord.idNumber));
                 } else {
                     treeRecord.setRGDBRecord(rgdbRecord);
                 }
             }
-Debug.printf(Level.FINE, "offset: %08x: %s", offset, treeRecord.toDebugString());
+logger.log(Level.DEBUG, "offset: %08x: %s".formatted(offset, treeRecord.toDebugString()));
 
             return treeRecord;
         } catch (Exception e) {
@@ -185,13 +190,13 @@ Debug.printStackTrace(e);
 
     /** Returns first TreeRecord child. */
     public TreeRecord get1stChildTreeRecord(TreeRecord treeRecord) {
-Debug.printf(Level.FINE, "pos: 0x%08x", 0x20 + treeRecord.offsetOf1stSubkey);
+logger.log(Level.DEBUG, "pos: 0x%08x".formatted(0x20 + treeRecord.offsetOf1stSubkey));
         return newInstance(0x20 + treeRecord.offsetOf1stSubkey);
     }
 
     /** Gets next TreeRecord. */
     public TreeRecord getNextTreeRecord(TreeRecord treeRecord) {
-Debug.printf(Level.FINE, "pos: 0x%08x", 0x20 + treeRecord.offsetOfNext);
+logger.log(Level.DEBUG, "pos: 0x%08x".formatted(0x20 + treeRecord.offsetOfNext));
         return newInstance(0x20 + treeRecord.offsetOfNext);
     }
 
@@ -230,7 +235,7 @@ Debug.printf(Level.FINE, "pos: 0x%08x", 0x20 + treeRecord.offsetOfNext);
                     "signature=" + Arrays.toString(signature) +
                     ", minorFormatVersion=" + minorFormatVersion +
                     ", majorFormatVersion=" + majorFormatVersion +
-                    String.format(", offsetOf1stRGDB=0x%08x", offsetOf1stRGDB) +
+                    ", offsetOf1stRGDB=0x%08x".formatted(offsetOf1stRGDB) +
                     ", checksum=" + checksum +
                     ", flags=" + flags +
                     ", idNumber=" + numberOfRGDB +
@@ -270,9 +275,9 @@ Debug.printf(Level.FINE, "pos: 0x%08x", 0x20 + treeRecord.offsetOfNext);
         public String toString() {
             return "RGKN{" +
                     "signature=" + Arrays.toString(signature) +
-                    String.format(", size=0x%08x", size) +
-                    String.format(", offsetOfRootRecord=0x%08x", offsetOfRootRecord) +
-                    String.format(", offsetOfFree=0x%08x", offsetOfFree) +
+                    ", size=0x%08x".formatted(size) +
+                    ", offsetOfRootRecord=0x%08x".formatted(offsetOfRootRecord) +
+                    ", offsetOfFree=0x%08x".formatted(offsetOfFree) +
                     ", flags=" + flags +
                     ", checksum=" + checksum +
                     ", unknown1=" + Arrays.toString(unknown1) +
@@ -319,13 +324,13 @@ Debug.printf(Level.FINE, "pos: 0x%08x", 0x20 + treeRecord.offsetOfNext);
 
         /** Returns having child TreeRecord or not. */
         public boolean hasChildTreeRecords() {
-Debug.println(Level.FINER, offsetOf1stSubkey != -1);
+logger.log(Level.TRACE, offsetOf1stSubkey != -1);
             return offsetOf1stSubkey != -1;
         }
 
         /** Returns having next TreeRecord ot not. */
         public boolean hasNextTreeRecord() {
-Debug.println(Level.FINER, offsetOfNext != -1);
+logger.log(Level.TRACE, offsetOfNext != -1);
             return offsetOfNext != -1;
         }
 
@@ -379,11 +384,11 @@ Debug.println(Level.FINER, offsetOfNext != -1);
         public String toDebugString() {
             return getClass().getSimpleName() + "{" +
                     "type=" + type +
-                    String.format(", hash=0x%08x", hash) +
-                    String.format(", nextFree=0x%08x", nextFree) +
-                    String.format(", offsetOfParent=0x%08x", offsetOfParent) +
-                    String.format(", offsetOf1stSubkey=0x%08x", offsetOf1stSubkey) +
-                    String.format(", offsetOfNext=0x%08x", offsetOfNext) +
+                    ", hash=0x%08x".formatted(hash) +
+                    ", nextFree=0x%08x".formatted(nextFree) +
+                    ", offsetOfParent=0x%08x".formatted(offsetOfParent) +
+                    ", offsetOf1stSubkey=0x%08x".formatted(offsetOf1stSubkey) +
+                    ", offsetOfNext=0x%08x".formatted(offsetOfNext) +
                     ", idNumber=" + idNumber +
                     ", rgdb=" + rgdb +
                     '}';
@@ -426,7 +431,7 @@ Debug.println(Level.FINER, offsetOfNext != -1);
         public String toString() {
             return "RGDB{" +
                     "signature=" + Arrays.toString(signature) +
-                    String.format(", size=%1$d (%1$08x)", size) +
+                    ", size=%1$d (%1$08x)".formatted(size) +
                     ", unusedSize=" + unusedSize +
                     ", flags=" + flags +
                     ", section=" + section +
@@ -529,7 +534,7 @@ Debug.println(Level.FINER, offsetOfNext != -1);
         @Override
         public String toString() {
             return "ValueRecord{" +
-                    String.format("type=%1$d(%1$08x)", type) +
+                    "type=%1$d(%1$08x)".formatted(type) +
                     ", dummy=" + dummy +
                     ", lengthOfValueName=" + lengthOfValueName +
                     ", lengthOfValueData=" + lengthOfValueData +
@@ -542,26 +547,26 @@ Debug.println(Level.FINER, offsetOfNext != -1);
         void x() {
             switch (type) {
             case RegSZ: // 0x00000001
-//Debug.println("valueData: " + new String(valueData, Charset.forName(encoding)));
+//logger.log(Level.DEBUG, "valueData: " + new String(valueData, Charset.forName(encoding)));
                 break;
             case RegBin: // 0x00000003
-//Debug.print("valueData:");
+//System.out.print("valueData:");
 //for(int i = 0; i < lengthOfValueData; i++) {
-//System.err.printf(" %02x", valueData[i]);
-//}Debug.out.println();
+// System.err.printf(" %02x", valueData[i]);
+//}System.out.println();
                 break;
             case RegDWord: // 0x00000004
             case 0x00000000:
             case 0x00000002:
             case 0x00000007:
             default:
-                Debug.println(Level.WARNING, "data: unknown(" + type + ")");
+                logger.log(Level.WARNING, "data: unknown(" + type + ")");
                 break;
             }
         }
 
         /** Returns data type as String. */
-        String getTypeName(int type) {
+        static String getTypeName(int type) {
 
             return switch (type) {
                 case RegSZ -> "RegSZ";       // 0x00000001

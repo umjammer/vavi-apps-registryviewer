@@ -16,11 +16,12 @@ import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.prefs.Preferences;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -49,6 +50,8 @@ import vavi.util.Debug;
 import vavi.util.RegexFileFilter;
 import vavi.util.win32.registry.Registry;
 
+import static java.lang.System.getLogger;
+
 
 /**
  * Registry Viewer application.
@@ -61,6 +64,8 @@ import vavi.util.win32.registry.Registry;
  *          1.11 020503 nsano refine <br/>
  */
 public class RegistryViewer {
+
+    private static final Logger logger = getLogger(RegistryViewer.class.getName());
 
     /** */
     private static final Preferences prefs = Preferences.userNodeForPackage(RegistryViewer.class);
@@ -102,7 +107,7 @@ public class RegistryViewer {
         table.setShowVerticalLines(false);
         table.getColumn("Name").setCellRenderer(new ValueRecordTableCellRenderer());
 
-//      ToolTipManager.sharedInstance().registerComponent(table);
+//        ToolTipManager.sharedInstance().registerComponent(table);
 
         // Create the tree
         tree = new JTree();
@@ -125,7 +130,7 @@ public class RegistryViewer {
         });
         // Enable tool tips for the tree, without this tool tips
         // will not be picked up.
-//      ToolTipManager.sharedInstance().registerComponent(tree);
+//        ToolTipManager.sharedInstance().registerComponent(tree);
 
         tree.setCellRenderer(new RegistryViewerTreeCellRenderer());
 
@@ -190,7 +195,7 @@ public class RegistryViewer {
                 value.addValue(name, treeRecord.getValueDataAsDWord(i));
                 break;
             default:
-Debug.println("type: Unknown: " + treeRecord.getValueType(i));
+logger.log(Level.DEBUG, "type: Unknown: " + treeRecord.getValueType(i));
                 value.addValue(name, treeRecord.getValueData(i), treeRecord.getValueType(i));
                 break;
             }
@@ -211,7 +216,7 @@ Debug.println("type: Unknown: " + treeRecord.getValueType(i));
         // ImageIcon icon;
         Insets insets0 = new Insets(0, 0, 0, 0);
 
-//      toolBar.setMargin(insets0);
+//        toolBar.setMargin(insets0);
         toolBar.setFloatable(false);
         toolBar.setLayout(new FlowLayout(FlowLayout.LEFT));
 
@@ -229,7 +234,7 @@ Debug.println("type: Unknown: " + treeRecord.getValueType(i));
         button.setMargin(insets0);
         button.setToolTipText(button.getText());
         button.setText("");
-//      button.setDefaultCapable(true);
+//        button.setDefaultCapable(true);
 
         return toolBar;
     }
@@ -311,9 +316,9 @@ Debug.println("type: Unknown: " + treeRecord.getValueType(i));
                 tree.scrollPathToVisible(path);
 //              tree.repaint();
                 fillTable((ValueRecordTreeNode) path.getLastPathComponent());
-// Debug.println(": done");
+//logger.log(Level.DEBUG, ": done");
             }
-// ValueRecordTreeNode node = search(root, text); if (node != null) { Debug.println(node.getAbsoluteName()); } else { Debug.println("not found"); }
+//ValueRecordTreeNode node = search(root, text); if (node != null) { logger.log(Level.DEBUG, node.getAbsoluteName()); } else { logger.log(Level.DEBUG, "not found"); }
 
             frame.setCursor(Cursor.getDefaultCursor());
         }
@@ -342,7 +347,7 @@ Debug.println("type: Unknown: " + treeRecord.getValueType(i));
             for (int i = 0; i < parent.getChildCount(); i++) {
                 ValueRecordTreeNode child = (ValueRecordTreeNode) parent.getChildAt(i);
                 if (child.contains(string)) {
-Debug.println(Level.FINER, child.getAbsoluteName());
+logger.log(Level.TRACE, child.getAbsoluteName());
                     searchResults.add(new TreePath(child.getPath()));
                 }
                 if (child.getChildCount() > 0) {

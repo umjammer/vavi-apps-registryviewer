@@ -73,14 +73,14 @@ public class ValueRecordTreeNode extends DefaultMutableTreeNode {
     public boolean contains(String str) {
         if (userObject.toString().toLowerCase().contains(str.toLowerCase()))
             return true;
-// Debug.println(userObject.getClass().getName());
+//logger.log(Level.DEBUG, userObject.getClass().getName());
 
         if (model == null) {
             return false;
         }
 
         for (int i = 0; i < model.getRowCount(); i++) {
-            // Debug.println(value.getValueAt(i, 1).getClass().getName());
+            // logger.log(Level.DEBUG, value.getValueAt(i, 1).getClass().getName());
             if (((String) model.getValueAt(i, 1)).toLowerCase().contains(str.toLowerCase())) {
                 return true;
             }

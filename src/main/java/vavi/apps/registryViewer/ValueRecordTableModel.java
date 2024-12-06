@@ -6,6 +6,8 @@
 
 package vavi.apps.registryViewer;
 
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,6 +20,8 @@ import javax.swing.table.AbstractTableModel;
 
 import vavi.util.Debug;
 
+import static java.lang.System.getLogger;
+
 
 /**
  * The table model for ValueRecord.
@@ -27,6 +31,8 @@ import vavi.util.Debug;
  *          1.00 010908 nsano refine <br>
  */
 public class ValueRecordTableModel extends AbstractTableModel {
+
+    private static final Logger logger = getLogger(ValueRecordTableModel.class.getName());
 
     /** array of the data names */
     List<JLabel> names = new ArrayList<>();
@@ -84,8 +90,8 @@ public class ValueRecordTableModel extends AbstractTableModel {
 
     @Override
     public Object getValueAt(int row, int col) {
-//Debug.println("values: " + getRowCount());
-//Debug.println("cell: " + row + ", " + col);
+//logger.log(Level.DEBUG, "values: " + getRowCount());
+//logger.log(Level.DEBUG, "cell: " + row + ", " + col);
         if (col == 0)
             return names.get(row);
         else if (col == 1) {
@@ -107,7 +113,7 @@ public class ValueRecordTableModel extends AbstractTableModel {
                 return tmp.toString();
             }
         } else {
-Debug.println("col: " + col);
+logger.log(Level.DEBUG, "col: " + col);
             return null;
         }
     }
