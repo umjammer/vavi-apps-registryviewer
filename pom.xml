@@ -57,7 +57,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.11.0</version>
+        <version>3.12.1</version>
         <configuration>
           <release>17</release>
         </configuration>
@@ -65,9 +65,12 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.2.2</version>
+        <version>3.2.5</version>
         <configuration>
           <argLine>
+            -Dswing.defaultlaf=com.formdev.flatlaf.FlatLightLaf
+            -Dapple.laf.useScreenMenuBar=true
+            -Dapple.awt.application.name=RegistryViewer
             -Djava.util.logging.config.file=${project.build.testOutputDirectory}/logging.properties
           </argLine>
           <trimStackTrace>false</trimStackTrace>
@@ -81,11 +84,6 @@
       <id>jitpack.io</id>
       <url>https://jitpack.io</url>
     </repository>
-    <repository>
-      <id>maven_central</id>
-      <name>Maven Central</name>
-      <url>https://repo.maven.apache.org/maven2/</url>
-    </repository>
   </repositories>
 
   <dependencyManagement>
@@ -93,7 +91,7 @@
       <dependency>
         <groupId>org.junit</groupId>
         <artifactId>junit-bom</artifactId>
-        <version>5.10.2</version>
+        <version>6.1.1</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -102,25 +100,25 @@
 
   <dependencies>
     <dependency>
-      <groupId>com.github.umjammer</groupId>
+      <groupId>com.github.umjammer</groupId> <!-- vavi / com.github.umjammer -->
       <artifactId>vavi-commons</artifactId>
-      <version>1.1.13</version>
+      <version>1.1.22</version>
     </dependency>
     <dependency>
-      <groupId>com.github.umjammer</groupId>
+      <groupId>com.github.umjammer</groupId> <!-- vavi / com.github.umjammer -->
       <artifactId>vavi-util-serdes</artifactId>
-      <version>1.0.6</version>
+      <version>1.0.15</version>
     </dependency>
     <dependency>
       <groupId>com.github.umjammer</groupId>
       <artifactId>vavi-awt</artifactId>
-      <version>1.0.7</version>
+      <version>1.0.11</version>
     </dependency>
 
     <dependency>
       <groupId>com.formdev</groupId>
       <artifactId>flatlaf</artifactId>
-      <version>3.4.1</version>
+      <version>3.5</version>
       <scope>runtime</scope>
     </dependency>
 
@@ -137,6 +135,13 @@
     <dependency>
       <groupId>org.junit.platform</groupId>
       <artifactId>junit-platform-commons</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-jdk14</artifactId>
+      <version>2.0.18</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
