@@ -8,7 +8,7 @@
 
   <groupId>vavi</groupId>
   <artifactId>vavi-apps-registryviewer</artifactId>
-  <version>1.0.1</version>
+  <version>1.0.2</version>
 
   <name>Vavi Registry Viewer Application</name>
   <organization>
@@ -17,24 +17,60 @@
   <url>http://www.vavisoft.com/</url>
   <description/>
 
+  <profiles>
+    <profile>
+      <!-- mvn -P run antrun:run -Dregistry='src/test/resources/user.dat' -->
+      <id>run</id>
+      <build>
+        <plugins>
+          <plugin>
+            <!-- GOOD: fork: OK, test jars: OK, user args, default args: OK -->
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <version>3.1.0</version>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+                <java classname="vavi.apps.registryViewer.RegistryViewer" fork="true">
+                  <classpath>
+                    <path refid="maven.compile.classpath"/>
+                    <path refid="maven.test.classpath"/>
+                  </classpath>
+                  <jvmarg value="-Djava.util.logging.config.file=${project.build.testOutputDirectory}/logging.properties" />
+                  <jvmarg value="-Dswing.defaultlaf=com.formdev.flatlaf.FlatLightLaf" />
+                  <jvmarg value="-Dapple.laf.useScreenMenuBar=true" />
+                  <jvmarg value="-Dapple.awt.application.name=RegistryViewer" />
+                  <arg value="${registry}" />
+                </java>
+              </target>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
   <build>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.10.1</version>
+        <version>3.12.1</version>
         <configuration>
-          <source>8</source>
-          <target>8</target>
-          <encoding>UTF-8</encoding>
+          <release>17</release>
         </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.0.0-M7</version>
+        <version>3.2.5</version>
         <configuration>
           <argLine>
+            -Dswing.defaultlaf=com.formdev.flatlaf.FlatLightLaf
+            -Dapple.laf.useScreenMenuBar=true
+            -Dapple.awt.application.name=RegistryViewer
             -Djava.util.logging.config.file=${project.build.testOutputDirectory}/logging.properties
           </argLine>
           <trimStackTrace>false</trimStackTrace>
@@ -55,7 +91,7 @@
       <dependency>
         <groupId>org.junit</groupId>
         <artifactId>junit-bom</artifactId>
-        <version>5.9.1</version>
+        <version>6.1.1</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -64,25 +100,25 @@
 
   <dependencies>
     <dependency>
-      <groupId>com.github.umjammer</groupId>
+      <groupId>com.github.umjammer</groupId> <!-- vavi / com.github.umjammer -->
       <artifactId>vavi-commons</artifactId>
-      <version>1.1.8</version>
+      <version>1.1.22</version>
     </dependency>
     <dependency>
-      <groupId>com.github.umjammer</groupId>
+      <groupId>com.github.umjammer</groupId> <!-- vavi / com.github.umjammer -->
       <artifactId>vavi-util-serdes</artifactId>
-      <version>1.0.3</version>
+      <version>1.0.15</version>
     </dependency>
     <dependency>
       <groupId>com.github.umjammer</groupId>
       <artifactId>vavi-awt</artifactId>
-      <version>1.0.6</version>
+      <version>1.0.11</version>
     </dependency>
 
     <dependency>
       <groupId>com.formdev</groupId>
       <artifactId>flatlaf</artifactId>
-      <version>2.6</version>
+      <version>3.5</version>
       <scope>runtime</scope>
     </dependency>
 
@@ -99,6 +135,13 @@
     <dependency>
       <groupId>org.junit.platform</groupId>
       <artifactId>junit-platform-commons</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-jdk14</artifactId>
+      <version>2.0.18</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

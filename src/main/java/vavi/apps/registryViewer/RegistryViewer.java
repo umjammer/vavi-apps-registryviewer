@@ -8,6 +8,7 @@ package vavi.apps.registryViewer;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Insets;
@@ -15,10 +16,12 @@ import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.prefs.Preferences;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -47,39 +50,43 @@ import vavi.util.Debug;
 import vavi.util.RegexFileFilter;
 import vavi.util.win32.registry.Registry;
 
+import static java.lang.System.getLogger;
+
 
 /**
  * Registry Viewer application.
  * 
  * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
- * @version 0.00 990630 nsano initial version <br>
- *          1.00 010908 nsano refine <br>
- *          1.01 020430 nsano change ValueRecord::<init> arg <br>
- *          1.10 020430 nsano refine, no search result bug fix <br>
- *          1.11 020503 nsano refine <br>
+ * @version 0.00 990630 nsano initial version <br/>
+ *          1.00 010908 nsano refine <br/>
+ *          1.01 020430 nsano change ValueRecord::&lt;init&gt; arg <br/>
+ *          1.10 020430 nsano refine, no search result bug fix <br/>
+ *          1.11 020503 nsano refine <br/>
  */
 public class RegistryViewer {
+
+    private static final Logger logger = getLogger(RegistryViewer.class.getName());
 
     /** */
     private static final Preferences prefs = Preferences.userNodeForPackage(RegistryViewer.class);
 
     /** Window for showing Tree. */
-    private JFrame frame;
+    private final JFrame frame;
 
     /** Tree used for the example. */
-    private JTree tree;
+    private final JTree tree;
 
     /** Tree model. */
     private DefaultTreeModel treeModel;
 
-    private JTable table;
+    private final JTable table;
 
     private Registry registry;
 
     /**
      * Constructs a new instance of RegistryViewer.
      */
-    public RegistryViewer(File file) throws IOException {
+    public RegistryViewer(Path file) throws IOException {
 
         JMenuBar menuBar = constructMenuBar();
 
@@ -100,7 +107,7 @@ public class RegistryViewer {
         table.setShowVerticalLines(false);
         table.getColumn("Name").setCellRenderer(new ValueRecordTableCellRenderer());
 
-//      ToolTipManager.sharedInstance().registerComponent(table);
+//        ToolTipManager.sharedInstance().registerComponent(table);
 
         // Create the tree
         tree = new JTree();
@@ -123,7 +130,7 @@ public class RegistryViewer {
         });
         // Enable tool tips for the tree, without this tool tips
         // will not be picked up.
-//      ToolTipManager.sharedInstance().registerComponent(tree);
+//        ToolTipManager.sharedInstance().registerComponent(tree);
 
         tree.setCellRenderer(new RegistryViewerTreeCellRenderer());
 
@@ -156,12 +163,12 @@ public class RegistryViewer {
     }
 
     /** */
-    private void open(File file) throws IOException {
-        registry = new Registry(Files.newByteChannel(file.toPath()));
+    private void open(Path file) throws IOException {
+        registry = new Registry(Files.newByteChannel(file));
 
         searchResults.clear();
 
-        /* Create the JTreeModel. */
+        // Create the JTreeModel
         ValueRecordTreeNode root = new ValueRecordTreeNode(registry, registry.getRoot());
         treeModel = new DefaultTreeModel(root);
 
@@ -188,7 +195,7 @@ public class RegistryViewer {
                 value.addValue(name, treeRecord.getValueDataAsDWord(i));
                 break;
             default:
-Debug.println("type: Unknown: " + treeRecord.getValueType(i));
+logger.log(Level.DEBUG, "type: Unknown: " + treeRecord.getValueType(i));
                 value.addValue(name, treeRecord.getValueData(i), treeRecord.getValueType(i));
                 break;
             }
@@ -209,7 +216,7 @@ Debug.println("type: Unknown: " + treeRecord.getValueType(i));
         // ImageIcon icon;
         Insets insets0 = new Insets(0, 0, 0, 0);
 
-//      toolBar.setMargin(insets0);
+//        toolBar.setMargin(insets0);
         toolBar.setFloatable(false);
         toolBar.setLayout(new FlowLayout(FlowLayout.LEFT));
 
@@ -221,25 +228,25 @@ Debug.println("type: Unknown: " + treeRecord.getValueType(i));
         searchTexts = (JComboBox<String>) toolBar.add(new JComboBox<>());
         searchTexts.setEditable(true);
         searchTexts.setSize(40, 16);
-        searchTexts.addActionListener(ev -> searchAction.actionPerformed(ev));
+        searchTexts.addActionListener(searchAction);
 
         button = (JButton) toolBar.add(new JButton(searchAction));
         button.setMargin(insets0);
         button.setToolTipText(button.getText());
         button.setText("");
-//      button.setDefaultCapable(true);
+//        button.setDefaultCapable(true);
 
         return toolBar;
     }
 
     /** The open action */
-    private Action openAction = new AbstractAction("Open", UIManager.getIcon("registryViewer.openIcon")) {
+    private final Action openAction = new AbstractAction("Open", UIManager.getIcon("registryViewer.openIcon")) {
 
-        private String lastPath = prefs.get("lastPath", System.getProperty("user.dir"));
+        private final String lastPath = prefs.get("lastPath", System.getProperty("user.dir"));
 
-        private JFileChooser fc = new JFileChooser();
+        private final JFileChooser fc = new JFileChooser();
 
-        private RegexFileFilter filter = new RegexFileFilter("^.+\\.[dD][aA][tT]$", "Windows Registry");
+        private final RegexFileFilter filter = new RegexFileFilter("^.+\\.[dD][aA][tT]$", "Windows Registry");
 
         {
             fc.setFileFilter(filter);
@@ -250,7 +257,7 @@ Debug.println("type: Unknown: " + treeRecord.getValueType(i));
             int returnVal = fc.showOpenDialog(frame);
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 try {
-                    open(fc.getSelectedFile());
+                    open(fc.getSelectedFile().toPath());
                     prefs.put("lastPath", fc.getSelectedFile().getPath());
                 } catch (IOException e) {
                     Debug.printStackTrace(e);
@@ -260,10 +267,10 @@ Debug.println("type: Unknown: " + treeRecord.getValueType(i));
     };
 
     /** Search results of TreePath objects */
-    private List<TreePath> searchResults = new ArrayList<>();
+    private final List<TreePath> searchResults = new ArrayList<>();
 
     /** The search action */
-    private Action searchAction = new AbstractAction("Search", UIManager.getIcon("registryViewer.searchIcon")) {
+    private final Action searchAction = new AbstractAction("Search", UIManager.getIcon("registryViewer.searchIcon")) {
 
         /** The previous searched text */
         private String text;
@@ -273,16 +280,18 @@ Debug.println("type: Unknown: " + treeRecord.getValueType(i));
 
         @Override
         public void actionPerformed(ActionEvent ev) {
+            frame.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+
             addItemToSearchTexts();
 
             // clear if search text changed
 
-            if (!searchTexts.getSelectedItem().equals(text)) {
+            if (searchTexts.getSelectedItem() != null && !searchTexts.getSelectedItem().equals(text)) {
                 searchResults.clear();
                 text = (String) searchTexts.getSelectedItem();
             }
 
-            if (searchResults.size() == 0) {
+            if (searchResults.isEmpty()) {
 
                 // new search
 
@@ -301,15 +310,17 @@ Debug.println("type: Unknown: " + treeRecord.getValueType(i));
                 }
             }
 
-            if (searchResults.size() > 0) {
+            if (!searchResults.isEmpty()) {
                 TreePath path = searchResults.get(index);
                 tree.setSelectionPath(path);
                 tree.scrollPathToVisible(path);
 //              tree.repaint();
                 fillTable((ValueRecordTreeNode) path.getLastPathComponent());
-// Debug.println(": done");
+//logger.log(Level.DEBUG, ": done");
             }
-// ValueRecordTreeNode node = search(root, text); if (node != null) { Debug.println(node.getAbsoluteName()); } else { Debug.println("not found"); }
+//ValueRecordTreeNode node = search(root, text); if (node != null) { logger.log(Level.DEBUG, node.getAbsoluteName()); } else { logger.log(Level.DEBUG, "not found"); }
+
+            frame.setCursor(Cursor.getDefaultCursor());
         }
 
         /** */
@@ -336,7 +347,7 @@ Debug.println("type: Unknown: " + treeRecord.getValueType(i));
             for (int i = 0; i < parent.getChildCount(); i++) {
                 ValueRecordTreeNode child = (ValueRecordTreeNode) parent.getChildAt(i);
                 if (child.contains(string)) {
-Debug.println(Level.FINER, child.getAbsoluteName());
+logger.log(Level.TRACE, child.getAbsoluteName());
                     searchResults.add(new TreePath(child.getPath()));
                 }
                 if (child.getChildCount() > 0) {
@@ -365,7 +376,7 @@ Debug.println(Level.FINER, child.getAbsoluteName());
         JMenuBar menuBar = new JMenuBar();
         JMenuItem menuItem;
 
-        /* Good ol exit. */
+        // Good ol exit.
         menu = new JMenu("File");
         menu.setMnemonic('F');
         menuBar.add(menu);
@@ -396,8 +407,6 @@ Debug.println(Level.FINER, child.getAbsoluteName());
 
     /** */
     public static void main(String[] args) throws Exception {
-        new RegistryViewer(new File(args[0]));
+        new RegistryViewer(Path.of(args[0]));
     }
 }
-
-/* */

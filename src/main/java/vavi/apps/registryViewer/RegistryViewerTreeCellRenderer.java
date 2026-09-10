@@ -46,7 +46,7 @@ public class RegistryViewerTreeCellRenderer extends DefaultTreeCellRenderer {
         this.hasFocus = hasFocus;
 
         setText(stringValue);
-        /* Tooltips used by the tree. */
+        // Tooltips used by the tree
         setToolTipText(stringValue);
 
         if (selected)
@@ -56,7 +56,7 @@ public class RegistryViewerTreeCellRenderer extends DefaultTreeCellRenderer {
 
         String name = ((ValueRecordTreeNode) value).getUserObject().toString();
 
-        /* Set the image. */
+        // Set the image
         if ("HKEY_root".equals(name))
             setIcon(UIManager.getIcon("registryViewer.rootIcon"));
         else if (expanded)
@@ -73,5 +73,3 @@ public class RegistryViewerTreeCellRenderer extends DefaultTreeCellRenderer {
         return this;
     }
 }
-
-/* */
