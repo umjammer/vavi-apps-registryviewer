@@ -97,21 +97,22 @@ logger.log(Level.DEBUG, creg);
         Serdes.Util.deserialize(sbc, rgkn);
 logger.log(Level.DEBUG, rgkn);
 
-        sbc.position(creg.offsetOf1stRGDB);
-logger.log(Level.DEBUG, "[0] pos: %08x".formatted(sbc.position()));
+        long rgdbOffset = creg.offsetOf1stRGDB;
         rgdbs = new RGDB[creg.numberOfRGDB];
 
         for (int i = 0; i < creg.numberOfRGDB; i++) {
+            sbc.position(rgdbOffset);
+logger.log(Level.DEBUG, "[%d] pos: %08x".formatted(i, sbc.position()));
 
             rgdbs[i] = new RGDB();
             Serdes.Util.deserialize(sbc, rgdbs[i]);
-logger.log(Level.DEBUG, "[%d] %s".formatted(1, rgdbs[i]));
+logger.log(Level.DEBUG, "[%d] %s".formatted(i, rgdbs[i]));
 
             int o = 0;
             long baseOffset = sbc.position();
-            // 0x20 sizeof CREG ??? */
+            // 0x20 sizeof CREG ??? */ // 0x20 sizeof RGDB header
 logger.log(Level.DEBUG, "[%d] size: %08x".formatted(i, rgdbs[i].size - rgdbs[i].unusedSize));
-            while (o < rgdbs[i].size - rgdbs[i].unusedSize) {
+            while (o < rgdbs[i].size - rgdbs[i].unusedSize - 0x20) {
 //logger.log("[%d][%d] offset: %08x, %08x".formatted(i, rgdbs[i].rrs.size(), o, sbc.position() - baseOffset));
                 RGDBRecord rr = new RGDBRecord();
                 Serdes.Util.deserialize(sbc, rr);
@@ -135,7 +136,8 @@ logger.log(Level.DEBUG, "[%d] maybe end: offset: %08x, rr.size: %d".formatted(i,
                 sbc.position(baseOffset + o); // TODO
             }
 
-            sbc.position(creg.offsetOf1stRGDB + rgdbs[i].size);
+            rgdbOffset += rgdbs[i].size;
+            sbc.position(rgdbOffset);
 logger.log(Level.DEBUG, "[%d] pos: %08x".formatted(i + 1, sbc.position()));
         }
 

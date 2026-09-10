@@ -19,6 +19,8 @@ import vavi.util.serdes.CachingDIContainer;
 import vavi.util.win32.registry.Registry;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 /**
@@ -38,6 +40,11 @@ public class TestCase {
         Registry.TreeRecord root = registry.getRoot();
 Debug.println(root);
         assertEquals("HKEY_root", root.toString());
+        assertTrue(root.hasChildTreeRecords());
+        Registry.TreeRecord child = registry.get1stChildTreeRecord(root);
+Debug.println(child);
+        assertNotNull(child);
+        assertEquals(".Default", child.toString());
     }
 
     @Test
